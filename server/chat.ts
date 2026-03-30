@@ -7,6 +7,8 @@ import { appendMessage, getChatHistory, removeParticipant, upsertParticipant } f
 
 const clientMeta = new WeakMap<WebSocket, { senderId: string; senderName: string }>();
 const typingUsers = new Map<string, string>();
+const assignedNames = new Map<string, string>();
+let nextPersonNumber = 1;
 
 export const chatWss = new WebSocketServer({ noServer: true });
 
@@ -28,6 +30,18 @@ function broadcastChat(event: ServerChatEvent) {
       client.send(encoded);
     }
   }
+}
+
+function getAssignedName(senderId: string) {
+  const existing = assignedNames.get(senderId);
+  if (existing) {
+    return existing;
+  }
+
+  const name = `Person${nextPersonNumber}`;
+  nextPersonNumber += 1;
+  assignedNames.set(senderId, name);
+  return name;
 }
 
 function updateParticipant(
@@ -87,18 +101,20 @@ chatWss.on('connection', (socket) => {
       return;
     }
 
+    const senderName = getAssignedName(payload.senderId);
+
     if ('senderId' in payload && payload.senderId) {
       clientMeta.set(socket, {
         senderId: payload.senderId,
-        senderName: payload.senderName || 'You',
+        senderName,
       });
-      updateParticipant(payload.senderId, payload.senderName || 'You', {});
+      updateParticipant(payload.senderId, senderName, {});
     }
 
     if (payload.type === 'keypress') {
       logEvent('keypress', {
         senderId: payload.senderId,
-        senderName: payload.senderName,
+        senderName,
         key: payload.key,
         code: payload.code,
         altKey: payload.altKey,
@@ -110,7 +126,7 @@ chatWss.on('connection', (socket) => {
         draft: payload.draft,
       });
 
-      updateParticipant(payload.senderId, payload.senderName, {
+      updateParticipant(payload.senderId, senderName, {
         draft: payload.draft,
         cursorStart: payload.cursorStart,
         cursorEnd: payload.cursorEnd,
@@ -130,13 +146,13 @@ chatWss.on('connection', (socket) => {
     if (payload.type === 'draft-update') {
       logEvent('draft-update', {
         senderId: payload.senderId,
-        senderName: payload.senderName,
+        senderName,
         draft: payload.draft,
         cursorStart: payload.cursorStart,
         cursorEnd: payload.cursorEnd,
       });
 
-      updateParticipant(payload.senderId, payload.senderName, {
+      updateParticipant(payload.senderId, senderName, {
         draft: payload.draft,
         cursorStart: payload.cursorStart,
         cursorEnd: payload.cursorEnd,
@@ -147,13 +163,13 @@ chatWss.on('connection', (socket) => {
     if (payload.type === 'cursor-move') {
       logEvent('cursor-move', {
         senderId: payload.senderId,
-        senderName: payload.senderName,
+        senderName,
         draft: payload.draft,
         cursorStart: payload.cursorStart,
         cursorEnd: payload.cursorEnd,
       });
 
-      updateParticipant(payload.senderId, payload.senderName, {
+      updateParticipant(payload.senderId, senderName, {
         draft: payload.draft,
         cursorStart: payload.cursorStart,
         cursorEnd: payload.cursorEnd,
@@ -164,10 +180,10 @@ chatWss.on('connection', (socket) => {
     if (payload.type === 'typing') {
       logEvent('typing', {
         senderId: payload.senderId,
-        senderName: payload.senderName,
+        senderName,
         isTyping: payload.isTyping,
       });
-      setTypingState(payload.senderId, payload.senderName || 'You', payload.isTyping);
+      setTypingState(payload.senderId, senderName, payload.isTyping);
       return;
     }
 
@@ -177,7 +193,7 @@ chatWss.on('connection', (socket) => {
 
     typingUsers.delete(payload.senderId);
 
-    updateParticipant(payload.senderId, payload.senderName || 'You', {
+    updateParticipant(payload.senderId, senderName, {
       draft: '',
       cursorStart: 0,
       cursorEnd: 0,
@@ -187,7 +203,7 @@ chatWss.on('connection', (socket) => {
     const message: Message = {
       id: randomUUID(),
       senderId: payload.senderId,
-      senderName: payload.senderName || 'You',
+      senderName,
       content: payload.content.trim(),
       sentAt: new Date().toISOString(),
     };
@@ -196,7 +212,7 @@ chatWss.on('connection', (socket) => {
 
     logEvent('message', {
       senderId: payload.senderId,
-      senderName: payload.senderName || 'You',
+      senderName,
       content: payload.content.trim(),
     });
 
@@ -213,7 +229,7 @@ chatWss.on('connection', (socket) => {
     broadcastChat({
       type: 'typing',
       senderId: payload.senderId,
-      senderName: payload.senderName || 'You',
+      senderName,
       isTyping: false,
     });
   });
