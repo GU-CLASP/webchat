@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { ClientChatEvent, Message, ServerChatEvent } from '@shared/chat';
-
-const wsUrl =
-  import.meta.env.VITE_WS_URL ??
-  `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.hostname}:3001`;
+import { chatWsUrl } from './chat-app';
 
 const messages = ref<Message[]>([]);
 const draft = ref('');
@@ -61,7 +58,7 @@ function scrollToBottom(smooth = true) {
 }
 
 function connect() {
-  const connection = new WebSocket(wsUrl);
+  const connection = new WebSocket(chatWsUrl);
   socket.value = connection;
 
   connection.addEventListener('open', () => {
