@@ -18,6 +18,36 @@ export type ClientChatEvent =
       senderId: string;
       senderName: string;
       isTyping: boolean;
+    }
+  | {
+      type: 'keypress';
+      senderId: string;
+      senderName: string;
+      key: string;
+      code: string;
+      altKey: boolean;
+      ctrlKey: boolean;
+      metaKey: boolean;
+      shiftKey: boolean;
+      cursorStart: number | null;
+      cursorEnd: number | null;
+      draft: string;
+    }
+  | {
+      type: 'draft-update';
+      senderId: string;
+      senderName: string;
+      draft: string;
+      cursorStart: number | null;
+      cursorEnd: number | null;
+    }
+  | {
+      type: 'cursor-move';
+      senderId: string;
+      senderName: string;
+      cursorStart: number | null;
+      cursorEnd: number | null;
+      draft: string;
     };
 
 export type ServerChatEvent =

@@ -29,6 +29,16 @@ const history: Message[] = [
   },
 ];
 
+function logEvent(event: string, details: Record<string, unknown>) {
+  console.log(
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      event,
+      ...details,
+    }),
+  );
+}
+
 function broadcast(event: ServerChatEvent) {
   const encoded = JSON.stringify(event);
 
@@ -55,6 +65,10 @@ function setTypingState(senderId: string, senderName: string, isTyping: boolean)
 }
 
 wss.on('connection', (socket) => {
+  logEvent('connection-opened', {
+    activeConnections: wss.clients.size,
+  });
+
   const historyEvent: ServerChatEvent = {
     type: 'history',
     messages: history,
@@ -78,7 +92,51 @@ wss.on('connection', (socket) => {
       });
     }
 
+    if (payload.type === 'keypress') {
+      logEvent('keypress', {
+        senderId: payload.senderId,
+        senderName: payload.senderName,
+        key: payload.key,
+        code: payload.code,
+        altKey: payload.altKey,
+        ctrlKey: payload.ctrlKey,
+        metaKey: payload.metaKey,
+        shiftKey: payload.shiftKey,
+        cursorStart: payload.cursorStart,
+        cursorEnd: payload.cursorEnd,
+        draft: payload.draft,
+      });
+      return;
+    }
+
+    if (payload.type === 'draft-update') {
+      logEvent('draft-update', {
+        senderId: payload.senderId,
+        senderName: payload.senderName,
+        draft: payload.draft,
+        cursorStart: payload.cursorStart,
+        cursorEnd: payload.cursorEnd,
+      });
+      return;
+    }
+
+    if (payload.type === 'cursor-move') {
+      logEvent('cursor-move', {
+        senderId: payload.senderId,
+        senderName: payload.senderName,
+        draft: payload.draft,
+        cursorStart: payload.cursorStart,
+        cursorEnd: payload.cursorEnd,
+      });
+      return;
+    }
+
     if (payload.type === 'typing') {
+      logEvent('typing', {
+        senderId: payload.senderId,
+        senderName: payload.senderName,
+        isTyping: payload.isTyping,
+      });
       setTypingState(payload.senderId, payload.senderName || 'You', payload.isTyping);
       return;
     }
@@ -102,6 +160,12 @@ wss.on('connection', (socket) => {
       history.shift();
     }
 
+    logEvent('message', {
+      senderId: payload.senderId,
+      senderName: payload.senderName || 'You',
+      content: payload.content.trim(),
+    });
+
     broadcast({
       type: 'message',
       message,
@@ -117,6 +181,12 @@ wss.on('connection', (socket) => {
 
   socket.on('close', () => {
     const participant = clientMeta.get(socket);
+    logEvent('connection-closed', {
+      senderId: participant?.senderId ?? null,
+      senderName: participant?.senderName ?? null,
+      activeConnections: wss.clients.size - 1,
+    });
+
     if (!participant) {
       return;
     }

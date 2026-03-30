@@ -13,6 +13,7 @@ const socket = ref<WebSocket | null>(null);
 const isConnected = ref(false);
 const reconnectAttempt = ref(0);
 const chatBody = ref<HTMLElement | null>(null);
+const draftInput = ref<HTMLInputElement | null>(null);
 let shouldReconnect = true;
 let typingIdleTimer: number | undefined;
 let sentTypingState = false;
@@ -132,7 +133,30 @@ function emitTyping(isTyping: boolean) {
   sentTypingState = isTyping;
 }
 
+function sendClientEvent(payload: ClientChatEvent) {
+  if (!socket.value || socket.value.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  socket.value.send(JSON.stringify(payload));
+}
+
+function getCursorState() {
+  return {
+    cursorStart: draftInput.value?.selectionStart ?? null,
+    cursorEnd: draftInput.value?.selectionEnd ?? null,
+  };
+}
+
 function handleDraftInput() {
+  sendClientEvent({
+    type: 'draft-update',
+    senderId: currentUserId,
+    senderName: currentUserName,
+    draft: draft.value,
+    ...getCursorState(),
+  });
+
   if (!draft.value.trim()) {
     window.clearTimeout(typingIdleTimer);
     emitTyping(false);
@@ -144,6 +168,32 @@ function handleDraftInput() {
   typingIdleTimer = window.setTimeout(() => {
     emitTyping(false);
   }, 1200);
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  sendClientEvent({
+    type: 'keypress',
+    senderId: currentUserId,
+    senderName: currentUserName,
+    key: event.key,
+    code: event.code,
+    altKey: event.altKey,
+    ctrlKey: event.ctrlKey,
+    metaKey: event.metaKey,
+    shiftKey: event.shiftKey,
+    draft: draft.value,
+    ...getCursorState(),
+  });
+}
+
+function handleCursorMove() {
+  sendClientEvent({
+    type: 'cursor-move',
+    senderId: currentUserId,
+    senderName: currentUserName,
+    draft: draft.value,
+    ...getCursorState(),
+  });
 }
 
 function sendMessage() {
@@ -232,8 +282,13 @@ onBeforeUnmount(() => {
         <button class="ghost-button" type="button" aria-label="Attach file">+</button>
         <label class="composer-field">
           <input
+            ref="draftInput"
             v-model="draft"
             @input="handleDraftInput"
+            @click="handleCursorMove"
+            @keydown="handleKeydown"
+            @keyup="handleCursorMove"
+            @select="handleCursorMove"
             type="text"
             name="message"
             placeholder="Write a message"
