@@ -6,12 +6,19 @@ export type Message = {
   sentAt: string;
 };
 
-export type ClientChatEvent = {
-  type: 'message';
-  senderId: string;
-  content: string;
-  senderName: string;
-};
+export type ClientChatEvent =
+  | {
+      type: 'message';
+      senderId: string;
+      content: string;
+      senderName: string;
+    }
+  | {
+      type: 'typing';
+      senderId: string;
+      senderName: string;
+      isTyping: boolean;
+    };
 
 export type ServerChatEvent =
   | {
@@ -21,4 +28,10 @@ export type ServerChatEvent =
   | {
       type: 'message';
       message: Message;
+    }
+  | {
+      type: 'typing';
+      senderId: string;
+      senderName: string;
+      isTyping: boolean;
     };

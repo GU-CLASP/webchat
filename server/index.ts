@@ -10,6 +10,8 @@ const server = createServer((_, response) => {
 });
 
 const wss = new WebSocketServer({ server });
+const clientMeta = new WeakMap<WebSocket, { senderId: string; senderName: string }>();
+const typingUsers = new Map<string, string>();
 const history: Message[] = [
   {
     id: randomUUID(),
@@ -37,6 +39,21 @@ function broadcast(event: ServerChatEvent) {
   }
 }
 
+function setTypingState(senderId: string, senderName: string, isTyping: boolean) {
+  if (isTyping) {
+    typingUsers.set(senderId, senderName);
+  } else {
+    typingUsers.delete(senderId);
+  }
+
+  broadcast({
+    type: 'typing',
+    senderId,
+    senderName,
+    isTyping,
+  });
+}
+
 wss.on('connection', (socket) => {
   const historyEvent: ServerChatEvent = {
     type: 'history',
@@ -54,9 +71,23 @@ wss.on('connection', (socket) => {
       return;
     }
 
+    if ('senderId' in payload && payload.senderId) {
+      clientMeta.set(socket, {
+        senderId: payload.senderId,
+        senderName: payload.senderName || 'You',
+      });
+    }
+
+    if (payload.type === 'typing') {
+      setTypingState(payload.senderId, payload.senderName || 'You', payload.isTyping);
+      return;
+    }
+
     if (payload.type !== 'message' || !payload.content.trim()) {
       return;
     }
+
+    typingUsers.delete(payload.senderId);
 
     const message: Message = {
       id: randomUUID(),
@@ -75,6 +106,24 @@ wss.on('connection', (socket) => {
       type: 'message',
       message,
     });
+
+    broadcast({
+      type: 'typing',
+      senderId: payload.senderId,
+      senderName: payload.senderName || 'You',
+      isTyping: false,
+    });
+  });
+
+  socket.on('close', () => {
+    const participant = clientMeta.get(socket);
+    if (!participant) {
+      return;
+    }
+
+    if (typingUsers.has(participant.senderId)) {
+      setTypingState(participant.senderId, participant.senderName, false);
+    }
   });
 });
 

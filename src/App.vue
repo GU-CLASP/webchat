@@ -8,19 +8,38 @@ const wsUrl =
 
 const messages = ref<Message[]>([]);
 const draft = ref('');
+const typingUsers = ref<Record<string, string>>({});
 const socket = ref<WebSocket | null>(null);
 const isConnected = ref(false);
 const reconnectAttempt = ref(0);
 const chatBody = ref<HTMLElement | null>(null);
 let shouldReconnect = true;
+let typingIdleTimer: number | undefined;
+let sentTypingState = false;
 
 const title = 'Design Sync';
-const subtitle = computed(() => (isConnected.value ? 'online' : 'connecting...'));
+const subtitle = computed(() => {
+  if (!isConnected.value) {
+    return 'connecting...';
+  }
+
+  const names = Object.values(typingUsers.value);
+  if (names.length === 0) {
+    return 'online';
+  }
+
+  if (names.length === 1) {
+    return `${names[0]} is typing...`;
+  }
+
+  return `${names.length} people are typing...`;
+});
 const today = new Intl.DateTimeFormat('en', {
   month: 'long',
   day: 'numeric',
 }).format(new Date());
 const currentUserId = crypto.randomUUID();
+const currentUserName = 'You';
 
 const timeFormatter = new Intl.DateTimeFormat([], {
   hour: 'numeric',
@@ -60,12 +79,32 @@ function connect() {
 
     if (payload.type === 'message') {
       messages.value = [...messages.value, payload.message];
+      return;
+    }
+
+    if (payload.type === 'typing') {
+      if (payload.senderId === currentUserId) {
+        return;
+      }
+
+      if (payload.isTyping) {
+        typingUsers.value = {
+          ...typingUsers.value,
+          [payload.senderId]: payload.senderName,
+        };
+        return;
+      }
+
+      const nextUsers = { ...typingUsers.value };
+      delete nextUsers[payload.senderId];
+      typingUsers.value = nextUsers;
     }
   });
 
   connection.addEventListener('close', () => {
     isConnected.value = false;
     socket.value = null;
+    typingUsers.value = {};
 
     if (!shouldReconnect) {
       return;
@@ -75,6 +114,36 @@ function connect() {
     reconnectAttempt.value += 1;
     window.setTimeout(connect, delay);
   });
+}
+
+function emitTyping(isTyping: boolean) {
+  if (!socket.value || socket.value.readyState !== WebSocket.OPEN || sentTypingState === isTyping) {
+    return;
+  }
+
+  const payload: ClientChatEvent = {
+    type: 'typing',
+    senderId: currentUserId,
+    senderName: currentUserName,
+    isTyping,
+  };
+
+  socket.value.send(JSON.stringify(payload));
+  sentTypingState = isTyping;
+}
+
+function handleDraftInput() {
+  if (!draft.value.trim()) {
+    window.clearTimeout(typingIdleTimer);
+    emitTyping(false);
+    return;
+  }
+
+  emitTyping(true);
+  window.clearTimeout(typingIdleTimer);
+  typingIdleTimer = window.setTimeout(() => {
+    emitTyping(false);
+  }, 1200);
 }
 
 function sendMessage() {
@@ -87,11 +156,13 @@ function sendMessage() {
     type: 'message',
     senderId: currentUserId,
     content,
-    senderName: 'You',
+    senderName: currentUserName,
   };
 
   socket.value.send(JSON.stringify(payload));
   draft.value = '';
+  window.clearTimeout(typingIdleTimer);
+  emitTyping(false);
 }
 
 function formatTime(timestamp: string) {
@@ -108,6 +179,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   shouldReconnect = false;
+  window.clearTimeout(typingIdleTimer);
+  emitTyping(false);
   socket.value?.close();
 });
 </script>
@@ -138,6 +211,21 @@ onBeforeUnmount(() => {
             <span class="meta">{{ formatTime(message.sentAt) }}</span>
           </div>
         </article>
+
+        <article
+          v-for="name in Object.values(typingUsers)"
+          :key="name"
+          class="message-row"
+        >
+          <div class="bubble typing-bubble">
+            <p class="sender">{{ name }}</p>
+            <div class="typing-indicator" aria-label="Typing indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </article>
       </div>
 
       <form class="composer" @submit.prevent="sendMessage">
@@ -145,6 +233,7 @@ onBeforeUnmount(() => {
         <label class="composer-field">
           <input
             v-model="draft"
+            @input="handleDraftInput"
             type="text"
             name="message"
             placeholder="Write a message"
