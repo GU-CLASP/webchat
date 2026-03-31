@@ -90,6 +90,7 @@ function connect() {
           ...typingUsers.value,
           [payload.senderId]: payload.senderName,
         };
+        scrollToBottom();
         return;
       }
 
