@@ -2,14 +2,14 @@ import { createServer } from 'node:http';
 import { handleAdminUpgrade } from './admin';
 import { handleChatUpgrade } from './chat';
 
-const port = Number(process.env.PORT ?? 3001);
+const port = Number(process.env.PORT ?? 5061);
 const server = createServer((request, response) => {
   response.writeHead(200, { 'Content-Type': 'application/json' });
   response.end(
     JSON.stringify({
       status: 'ok',
       websocket: true,
-      endpoints: ['/ws/chat', '/ws/admin'],
+      endpoints: ['/webchat/backend/ws/chat', '/webchat/backend/ws/admin'],
       path: request.url ?? '/',
     }),
   );
@@ -18,12 +18,12 @@ const server = createServer((request, response) => {
 server.on('upgrade', (request, socket, head) => {
   const url = new URL(request.url ?? '/', 'http://localhost');
 
-  if (url.pathname === '/ws/chat') {
+  if (url.pathname === '/webchat/backend/ws/chat') {
     handleChatUpgrade(request, socket, head);
     return;
   }
 
-  if (url.pathname === '/ws/admin') {
+  if (url.pathname === '/webchat/backend/ws/admin') {
     handleAdminUpgrade(request, socket, head);
     return;
   }
