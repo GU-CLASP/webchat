@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.2",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-vue": "^5.2.1",
     "concurrently": "^9.1.2",
     "tsx": "^4.19.3",
