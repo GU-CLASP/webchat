@@ -1,7 +1,8 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import type { IncomingMessage } from 'node:http';
-import type { ServerAdminEvent } from '../shared/admin';
+import type { ClientAdminEvent, ServerAdminEvent } from '../shared/admin';
 import { getChatHistory, getParticipants } from './state';
+import { sendSystemMessage } from './chat';
 
 export const adminWss = new WebSocketServer({ noServer: true });
 
@@ -30,5 +31,21 @@ adminWss.on('connection', (socket) => {
     type: 'snapshot',
     participants: getParticipants(),
     messages: getChatHistory(),
+  });
+
+  socket.on('message', (raw) => {
+    let payload: ClientAdminEvent;
+
+    try {
+      payload = JSON.parse(raw.toString()) as ClientAdminEvent;
+    } catch {
+      return;
+    }
+
+    if (payload.type !== 'broadcast-message') {
+      return;
+    }
+
+    sendSystemMessage(payload.content);
   });
 });

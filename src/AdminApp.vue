@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import type { ParticipantState, ServerAdminEvent } from '@shared/admin';
+import type { ClientAdminEvent, ParticipantState, ServerAdminEvent } from '@shared/admin';
 import type { Message } from '@shared/chat';
 
 const adminWsUrl =
@@ -10,7 +10,9 @@ const adminWsUrl =
 const participants = ref<Record<string, ParticipantState>>({});
 const messages = ref<Message[]>([]);
 const isConnected = ref(false);
+const draft = ref('');
 const reconnectAttempt = ref(0);
+const adminSocket = ref<WebSocket | null>(null);
 let shouldReconnect = true;
 
 const orderedParticipants = computed(() =>
@@ -21,6 +23,7 @@ const orderedParticipants = computed(() =>
 
 function connect() {
   const socket = new WebSocket(adminWsUrl);
+  adminSocket.value = socket;
 
   socket.addEventListener('open', () => {
     isConnected.value = true;
@@ -60,6 +63,9 @@ function connect() {
 
   socket.addEventListener('close', () => {
     isConnected.value = false;
+    if (adminSocket.value === socket) {
+      adminSocket.value = null;
+    }
 
     if (!shouldReconnect) {
       return;
@@ -69,6 +75,22 @@ function connect() {
     reconnectAttempt.value += 1;
     window.setTimeout(connect, delay);
   });
+}
+
+function sendBroadcast() {
+  const content = draft.value.trim();
+
+  if (!content || !adminSocket.value || adminSocket.value.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  const payload: ClientAdminEvent = {
+    type: 'broadcast-message',
+    content,
+  };
+
+  adminSocket.value.send(JSON.stringify(payload));
+  draft.value = '';
 }
 
 function formatCursor(participant: ParticipantState) {
@@ -113,6 +135,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   shouldReconnect = false;
+  adminSocket.value?.close();
 });
 </script>
 
@@ -134,6 +157,20 @@ onBeforeUnmount(() => {
           <h2>Shared Chat View</h2>
           <p>{{ messages.length }} messages mirrored from the main chat</p>
         </div>
+
+        <form class="broadcast-form" @submit.prevent="sendBroadcast">
+          <label class="label" for="broadcast-message">Broadcast message</label>
+          <textarea
+            id="broadcast-message"
+            v-model="draft"
+            class="broadcast-input"
+            rows="3"
+            placeholder="Send a message to everyone in chat"
+          />
+          <button class="broadcast-button" type="submit" :disabled="!draft.trim() || !isConnected">
+            Send to all users
+          </button>
+        </form>
 
         <div class="message-feed">
           <article v-for="message in messages" :key="message.id" class="message-card">

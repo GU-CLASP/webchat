@@ -113,6 +113,50 @@ body {
   margin-bottom: 8px;
 }
 
+.broadcast-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.broadcast-input {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  padding: 14px 16px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #eff6ff;
+  font: inherit;
+}
+
+.broadcast-input::placeholder {
+  color: #7f93b6;
+}
+
+.broadcast-input:focus {
+  outline: 2px solid rgba(96, 165, 250, 0.45);
+  outline-offset: 2px;
+}
+
+.broadcast-button {
+  justify-self: start;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  color: #eff6ff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.broadcast-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .admin-card {
   padding: 20px;
   border-radius: 24px;

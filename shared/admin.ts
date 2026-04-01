@@ -38,3 +38,8 @@ export type ServerAdminEvent =
       type: 'participant-left';
       senderId: string;
     };
+
+export type ClientAdminEvent = {
+  type: 'broadcast-message';
+  content: string;
+};

@@ -44,6 +44,40 @@ function getAssignedName(senderId: string) {
   return name;
 }
 
+export function sendSystemMessage(content: string, senderName = 'Admin Broadcast') {
+  const trimmedContent = content.trim();
+
+  if (!trimmedContent) {
+    return;
+  }
+
+  const message: Message = {
+    id: randomUUID(),
+    senderId: 'admin-broadcast',
+    senderName,
+    content: trimmedContent,
+    sentAt: new Date().toISOString(),
+  };
+
+  appendMessage(message);
+
+  logEvent('admin-message', {
+    senderId: message.senderId,
+    senderName: message.senderName,
+    content: message.content,
+  });
+
+  broadcastChat({
+    type: 'message',
+    message,
+  });
+
+  broadcastAdminEvent({
+    type: 'message',
+    message,
+  });
+}
+
 function updateParticipant(
   senderId: string,
   senderName: string,
