@@ -3,22 +3,7 @@ import type { Message } from '../shared/chat';
 import type { ParticipantState } from '../shared/admin';
 
 export const participantState = new Map<string, ParticipantState>();
-const chatHistory: Message[] = [
-  {
-    id: randomUUID(),
-    senderId: 'alex',
-    senderName: 'Alex',
-    content: 'Morning! This room is wired up over WebSockets now.',
-    sentAt: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
-  },
-  {
-    id: randomUUID(),
-    senderId: 'me',
-    senderName: 'You',
-    content: 'Perfect. The UI already feels pretty close to Telegram.',
-    sentAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-  },
-];
+const chatHistory: Message[] = [];
 
 export function upsertParticipant(
   senderId: string,
@@ -38,8 +23,6 @@ export function upsertParticipant(
     lastSeenAt: new Date().toISOString(),
     ...existing,
     ...updates,
-    senderId,
-    senderName,
   };
 
   participantState.set(senderId, nextState);
@@ -60,7 +43,4 @@ export function getChatHistory() {
 
 export function appendMessage(message: Message) {
   chatHistory.push(message);
-  if (chatHistory.length > 100) {
-    chatHistory.shift();
-  }
 }
