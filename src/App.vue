@@ -246,7 +246,16 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="shell">
-    <section class="phone-frame">
+    <section class="phone-frame" :class="{ disabled: !chatEnabled }">
+      <div
+        v-if="!chatEnabled"
+        class="chat-disabled-overlay"
+        role="alert"
+        aria-live="polite"
+      >
+        <p>Chat is currently disabled by an admin</p>
+      </div>
+
       <header class="chat-header">
         <div class="avatar">DS</div>
         <div class="chat-meta">
@@ -304,6 +313,7 @@ onBeforeUnmount(() => {
             name="message"
             placeholder="Write a message"
             autocomplete="off"
+            :disabled="!chatEnabled"
           />
         </label>
         <button class="send-button" type="submit" :disabled="disableSendMessage">

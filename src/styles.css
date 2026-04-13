@@ -32,6 +32,7 @@ input {
 }
 
 .phone-frame {
+  position: relative;
   width: min(100%, 460px);
   height: min(92vh, 860px);
   display: grid;
@@ -44,6 +45,42 @@ input {
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   background: #e5f0f8;
   backdrop-filter: blur(12px);
+}
+
+.phone-frame.disabled {
+  filter: grayscale(1) saturate(0.2) brightness(0.92);
+}
+
+.phone-frame.disabled .chat-header,
+.phone-frame.disabled .chat-body,
+.phone-frame.disabled .composer {
+  pointer-events: none;
+  user-select: none;
+}
+
+.chat-disabled-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(227, 235, 241, 0.5);
+  backdrop-filter: blur(2px);
+  text-align: center;
+}
+
+.chat-disabled-overlay p {
+  margin: 0;
+  max-width: 260px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 40px rgba(40, 56, 70, 0.12);
+  color: #304354;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .chat-header {
@@ -217,6 +254,10 @@ input {
   outline: 0;
   background: transparent;
   color: #1f2d3d;
+}
+
+.composer-field input:disabled {
+  cursor: not-allowed;
 }
 
 .ghost-button,
