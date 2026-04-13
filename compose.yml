@@ -1,0 +1,27 @@
+services:
+  backend:
+    image: docker.io/node:20-bullseye
+    network_mode: "host"
+    working_dir: /app/webchat
+    volumes:
+      - .:/app/webchat:z
+      - ./logs:/app/logs:Z
+    command: >
+      sh -lc "mkdir -p /app/logs &&
+      logfile=/app/logs/$$(date +%Y%m%d-%H%M%S).log &&
+      npm install && npm run start:server 2>&1 | tee -a \"$$logfile\""
+    logging:
+      driver: k8s-file
+
+  frontend:
+    depends_on:
+      - backend
+    image: docker.io/python:3-alpine
+    network_mode: "host"
+    working_dir: /app/frontend
+    volumes:
+      - ./dist:/app/frontend:z
+    command: >
+      sh -lc "python -m http.server 5060"
+    environment:
+      - UNUSED=test
