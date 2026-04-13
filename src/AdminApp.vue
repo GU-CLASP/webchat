@@ -21,6 +21,10 @@ const orderedParticipants = computed(() =>
   ),
 );
 
+const readyCount = computed(() =>
+  Object.values(participants.value).filter((participant) => participant.isReady).length,
+);
+
 function connect() {
   const socket = new WebSocket(adminWsUrl);
   adminSocket.value = socket;
@@ -172,6 +176,10 @@ const chatEnabled = ref(true);
           <p>{{ messages.length }} messages mirrored from the main chat</p>
         </div>
 
+        <p class="ready-summary">
+          {{ readyCount }} of {{ orderedParticipants.length }} users marked ready
+        </p>
+
         <input type="checkbox" @change="enableDisableChat" v-model="chatEnabled" />Enable chat
         <form class="broadcast-form" @submit.prevent="sendBroadcast">
           <label class="label" for="broadcast-message">Broadcast message</label>
@@ -205,9 +213,14 @@ const chatEnabled = ref(true);
             <h2>{{ participant.senderName }}</h2>
             <p class="participant-id">{{ participant.senderId }}</p>
           </div>
-          <span class="typing-chip" :class="{ active: participant.isTyping }">
-            {{ participant.isTyping ? 'Typing' : 'Idle' }}
-          </span>
+          <div class="participant-chips">
+            <span class="ready-chip" :class="{ active: participant.isReady }">
+              {{ participant.isReady ? 'Ready' : 'Not ready' }}
+            </span>
+            <span class="typing-chip" :class="{ active: participant.isTyping }">
+              {{ participant.isTyping ? 'Typing' : 'Idle' }}
+            </span>
+          </div>
         </div>
 
         <div class="field">

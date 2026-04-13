@@ -47,10 +47,6 @@ input {
   backdrop-filter: blur(12px);
 }
 
-.phone-frame.disabled {
-  filter: grayscale(1) saturate(0.2) brightness(0.92);
-}
-
 .phone-frame.disabled .chat-header,
 .phone-frame.disabled .chat-body,
 .phone-frame.disabled .composer {
@@ -70,9 +66,12 @@ input {
   text-align: center;
 }
 
+.chat-disabled-card {
+  max-width: 260px;
+}
+
 .chat-disabled-overlay p {
   margin: 0;
-  max-width: 260px;
   padding: 16px 20px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.92);
@@ -81,6 +80,37 @@ input {
   font-size: 0.98rem;
   font-weight: 700;
   line-height: 1.4;
+}
+
+.ready-toggle {
+  margin-top: 14px;
+  min-width: 160px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(77, 172, 242, 0.92);
+  box-shadow: 0 12px 24px rgba(54, 103, 144, 0.18);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    opacity 150ms ease,
+    background 150ms ease;
+}
+
+.ready-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ready-toggle.active {
+  background: rgba(72, 168, 104, 0.95);
+}
+
+.ready-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .chat-header {

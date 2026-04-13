@@ -4,6 +4,7 @@ export type ParticipantState = {
   senderId: string;
   senderName: string;
   isTyping: boolean;
+  isReady: boolean;
   draft: string;
   cursorStart: number | null;
   cursorEnd: number | null;

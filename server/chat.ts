@@ -225,6 +225,19 @@ chatWss.on('connection', (socket) => {
       return;
     }
 
+    if (payload.type === 'ready-state') {
+      logEvent('ready-state', {
+        senderId: payload.senderId,
+        senderName,
+        isReady: payload.isReady,
+      });
+
+      updateParticipant(payload.senderId, senderName, {
+        isReady: payload.isReady,
+      });
+      return;
+    }
+
     if (payload.type !== 'message' || !payload.content.trim()) {
       return;
     }

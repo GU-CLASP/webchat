@@ -48,6 +48,12 @@ export type ClientChatEvent =
       cursorStart: number | null;
       cursorEnd: number | null;
       draft: string;
+    }
+  | {
+      type: 'ready-state';
+      senderId: string;
+      senderName: string;
+      isReady: boolean;
     };
 
 export type ServerChatEvent =

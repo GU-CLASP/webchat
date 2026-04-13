@@ -9,6 +9,7 @@ const draft = ref('');
 const typingUsers = ref<Record<string, string>>({});
 const socket = ref<WebSocket | null>(null);
 const isConnected = ref(false);
+const isReady = ref(false);
 const reconnectAttempt = ref(0);
 const chatBody = ref<HTMLElement | null>(null);
 const draftInput = ref<HTMLInputElement | null>(null);
@@ -72,6 +73,15 @@ function connect() {
     console.log(`Connected to chat websocket!`);
     isConnected.value = true;
     reconnectAttempt.value = 0;
+
+    if (isReady.value) {
+      sendClientEvent({
+        type: 'ready-state',
+        senderId: currentUserId,
+        senderName: currentUserName,
+        isReady: true,
+      });
+    }
   });
 
   connection.addEventListener('message', (event) => {
@@ -148,6 +158,17 @@ function sendClientEvent(payload: ClientChatEvent) {
   }
 
   socket.value.send(JSON.stringify(payload));
+}
+
+function toggleReady() {
+  const nextReady = !isReady.value;
+  isReady.value = nextReady;
+  sendClientEvent({
+    type: 'ready-state',
+    senderId: currentUserId,
+    senderName: currentUserName,
+    isReady: nextReady,
+  });
 }
 
 function getCursorState() {
@@ -253,7 +274,18 @@ onBeforeUnmount(() => {
         role="alert"
         aria-live="polite"
       >
-        <p>Chat is currently disabled by an admin</p>
+        <div class="chat-disabled-card">
+          <p>Chat is currently disabled by an admin</p>
+          <button
+            class="ready-toggle"
+            type="button"
+            :class="{ active: isReady }"
+            :disabled="!isConnected"
+            @click="toggleReady"
+          >
+            {{ isReady ? 'Ready!' : 'Mark as ready' }}
+          </button>
+        </div>
       </div>
 
       <header class="chat-header">

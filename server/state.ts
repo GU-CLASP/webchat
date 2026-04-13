@@ -15,6 +15,7 @@ export function upsertParticipant(
     senderId,
     senderName,
     isTyping: existing?.isTyping ?? false,
+    isReady: existing?.isReady ?? false,
     draft: existing?.draft ?? '',
     cursorStart: existing?.cursorStart ?? null,
     cursorEnd: existing?.cursorEnd ?? null,
