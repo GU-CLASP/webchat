@@ -7,6 +7,7 @@ const adminWsUrl =
   import.meta.env.VITE_ADMIN_WS_URL ??
   `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.hostname}:5061/webchat/backend/ws/admin`;
 
+const chatEnabled = ref(false);
 const participants = ref<Record<string, ParticipantState>>({});
 const messages = ref<Message[]>([]);
 const isConnected = ref(false);
@@ -153,8 +154,6 @@ onBeforeUnmount(() => {
   shouldReconnect = false;
   adminSocket.value?.close();
 });
-
-const chatEnabled = ref(true);
 </script>
 
 <template>
