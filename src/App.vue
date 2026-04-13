@@ -21,7 +21,7 @@ let shouldReconnect = true;
 let typingIdleTimer: number | undefined;
 let sentTypingState = false;
 
-const title = 'Design Sync';
+const title = 'DivCon Chat';
 const subtitle = computed(() => {
   if (!isConnected.value) {
     return 'connecting...';
@@ -288,7 +288,9 @@ onBeforeUnmount(() => {
       </div>
 
       <form class="composer" @submit.prevent="sendMessage">
+        <!--
         <button class="ghost-button" type="button" aria-label="Attach file">+</button>
+        -->
         <label class="composer-field">
           <input
             ref="draftInput"
