@@ -199,23 +199,12 @@ body {
   word-break: break-all;
 }
 
-.typing-chip {
-  align-self: start;
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.14);
-  color: #cbd5e1;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.typing-chip.active {
+.chip.typing-chip.active {
   background: rgba(59, 130, 246, 0.22);
   color: #bfdbfe;
 }
 
-.ready-chip {
+.chip {
   padding: 8px 10px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.14);
@@ -225,7 +214,12 @@ body {
   letter-spacing: 0.08em;
 }
 
-.ready-chip.active {
+.chip.help-chip.active {
+  background: rgba(255, 0, 0, 0.9);
+  color: #c7f9d2;
+}
+
+.chip.ready-chip.active {
   background: rgba(34, 197, 94, 0.22);
   color: #c7f9d2;
 }

@@ -213,10 +213,13 @@ onBeforeUnmount(() => {
             <p class="participant-id">{{ participant.senderId }}</p>
           </div>
           <div class="participant-chips">
-            <span class="ready-chip" :class="{ active: participant.isReady }">
+            <span v-if="participant.isReady === false && !chatEnabled" class="chip help-chip active">
+              Help Requested
+            </span>
+            <span class="chip ready-chip" :class="{ active: participant.isReady }">
               {{ participant.isReady ? 'Ready' : 'Not ready' }}
             </span>
-            <span class="typing-chip" :class="{ active: participant.isTyping }">
+            <span class="chip typing-chip" :class="{ active: participant.isTyping }">
               {{ participant.isTyping ? 'Typing' : 'Idle' }}
             </span>
           </div>

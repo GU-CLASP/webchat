@@ -82,7 +82,7 @@ input {
   line-height: 1.4;
 }
 
-.ready-toggle {
+.button-toggle {
   margin-top: 14px;
   min-width: 160px;
   min-height: 44px;
@@ -100,7 +100,7 @@ input {
     background 150ms ease;
 }
 
-.ready-toggle:hover:not(:disabled) {
+.button-toggle:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
@@ -108,7 +108,11 @@ input {
   background: rgba(72, 168, 104, 0.95);
 }
 
-.ready-toggle:disabled {
+.help-toggle.active {
+  background: rgba(192, 72, 104, 0.95);
+}
+
+.button-toggle:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }

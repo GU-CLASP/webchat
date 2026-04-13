@@ -53,7 +53,7 @@ export type ClientChatEvent =
       type: 'ready-state';
       senderId: string;
       senderName: string;
-      isReady: boolean;
+      isReady: boolean | null;
     };
 
 export type ServerChatEvent =

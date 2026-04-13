@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
 import type { ClientChatEvent, Message, ServerChatEvent } from '@shared/chat';
 import { chatWsUrl } from './chat-app';
 
@@ -9,7 +9,7 @@ const draft = ref('');
 const typingUsers = ref<Record<string, string>>({});
 const socket = ref<WebSocket | null>(null);
 const isConnected = ref(false);
-const isReady = ref(false);
+const isReady: Ref<boolean | null, boolean | null> = ref(null);
 const reconnectAttempt = ref(0);
 const chatBody = ref<HTMLElement | null>(null);
 const draftInput = ref<HTMLInputElement | null>(null);
@@ -74,14 +74,12 @@ function connect() {
     isConnected.value = true;
     reconnectAttempt.value = 0;
 
-    if (isReady.value) {
-      sendClientEvent({
-        type: 'ready-state',
-        senderId: currentUserId,
-        senderName: currentUserName,
-        isReady: true,
-      });
-    }
+    sendClientEvent({
+      type: 'ready-state',
+      senderId: currentUserId,
+      senderName: currentUserName,
+      isReady: isReady.value,
+    });
   });
 
   connection.addEventListener('message', (event) => {
@@ -160,15 +158,24 @@ function sendClientEvent(payload: ClientChatEvent) {
   socket.value.send(JSON.stringify(payload));
 }
 
-function toggleReady() {
-  const nextReady = !isReady.value;
-  isReady.value = nextReady;
+function setReady(value: boolean | null) {
+  isReady.value = value;
   sendClientEvent({
     type: 'ready-state',
     senderId: currentUserId,
     senderName: currentUserName,
-    isReady: nextReady,
+    isReady: value,
   });
+}
+
+function toggleReady() {
+  const nextReady = isReady.value === true ? null : true;
+  setReady(nextReady);
+}
+
+function toggleHelp() {
+  const nextReady = isReady.value === false ? null : false;
+  setReady(nextReady);
 }
 
 function getCursorState() {
@@ -277,13 +284,22 @@ onBeforeUnmount(() => {
         <div class="chat-disabled-card">
           <p>Chat is currently disabled by an admin</p>
           <button
-            class="ready-toggle"
+            class="button-toggle ready-toggle"
             type="button"
-            :class="{ active: isReady }"
+            :class="{ active: isReady == true }"
             :disabled="!isConnected"
             @click="toggleReady"
           >
-            {{ isReady ? 'Ready!' : 'Mark as ready' }}
+            {{ isReady === true ? 'Ready!' : 'Mark as ready' }}
+          </button>
+          <button
+            class="button-toggle help-toggle"
+            type="button"
+            :class="{ active: isReady === false }"
+            :disabled="!isConnected"
+            @click="toggleHelp"
+          >
+            {{ isReady === false ? 'Help requested!' : 'Request help' }}
           </button>
         </div>
       </div>
