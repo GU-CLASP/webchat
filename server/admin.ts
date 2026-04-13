@@ -1,8 +1,9 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import type { IncomingMessage } from 'node:http';
-import type { ClientAdminEvent, ServerAdminEvent } from '../shared/admin';
+import type { ServerAdminEvent } from '../shared/admin';
 import { getChatHistory, getParticipants } from './state';
-import { sendSystemMessage } from './chat';
+import { broadcastPayload, sendSystemMessage } from './chat';
+import { ServerChatEvent } from '@shared/chat';
 
 export const adminWss = new WebSocketServer({ noServer: true });
 
@@ -34,18 +35,19 @@ adminWss.on('connection', (socket) => {
   });
 
   socket.on('message', (raw) => {
-    let payload: ClientAdminEvent;
+    let payload: ServerChatEvent;
 
     try {
-      payload = JSON.parse(raw.toString()) as ClientAdminEvent;
+      payload = JSON.parse(raw.toString()) as ServerChatEvent;
     } catch {
       return;
     }
 
-    if (payload.type !== 'broadcast-message') {
-      return;
+    if (payload.type === 'broadcast-message') {
+      sendSystemMessage(payload.content);
     }
-
-    sendSystemMessage(payload.content);
+    if (payload.type === 'chat-enabled') {
+      broadcastPayload(payload);
+    }
   });
 });

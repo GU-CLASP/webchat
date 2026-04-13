@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import type { ClientAdminEvent, ParticipantState, ServerAdminEvent } from '@shared/admin';
-import type { Message } from '@shared/chat';
+import type { ParticipantState, ServerAdminEvent } from '@shared/admin';
+import type { Message, ServerChatEvent } from '@shared/chat';
 
 const adminWsUrl =
   import.meta.env.VITE_ADMIN_WS_URL ??
@@ -84,13 +84,25 @@ function sendBroadcast() {
     return;
   }
 
-  const payload: ClientAdminEvent = {
+  const payload: ServerChatEvent = {
     type: 'broadcast-message',
     content,
   };
 
   adminSocket.value.send(JSON.stringify(payload));
   draft.value = '';
+}
+
+function enableDisableChat() {
+  if (!adminSocket.value || adminSocket.value.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  const payload: ServerChatEvent = {
+    type: 'chat-enabled',
+    enabled: chatEnabled.value,
+  };
+  adminSocket.value.send(JSON.stringify(payload));
 }
 
 function formatCursor(participant: ParticipantState) {
@@ -137,6 +149,8 @@ onBeforeUnmount(() => {
   shouldReconnect = false;
   adminSocket.value?.close();
 });
+
+const chatEnabled = ref(true);
 </script>
 
 <template>
@@ -158,6 +172,7 @@ onBeforeUnmount(() => {
           <p>{{ messages.length }} messages mirrored from the main chat</p>
         </div>
 
+        <input type="checkbox" @change="enableDisableChat" v-model="chatEnabled" />Enable chat
         <form class="broadcast-form" @submit.prevent="sendBroadcast">
           <label class="label" for="broadcast-message">Broadcast message</label>
           <textarea

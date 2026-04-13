@@ -23,6 +23,10 @@ function logEvent(event: string, details: Record<string, unknown>) {
 }
 
 function broadcastChat(event: ServerChatEvent) {
+  return broadcastPayload(event);
+}
+
+export function broadcastPayload(event: any) {
   const encoded = JSON.stringify(event);
 
   for (const client of chatWss.clients) {

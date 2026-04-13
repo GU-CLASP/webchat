@@ -60,6 +60,14 @@ export type ServerChatEvent =
       message: Message;
     }
   | {
+      type: 'chat-enabled';
+      enabled: boolean;
+    }
+  | {
+      type: 'broadcast-message';
+      content: string;
+    }
+  | {
       type: 'typing';
       senderId: string;
       senderName: string;

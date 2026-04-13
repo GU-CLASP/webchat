@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { ClientChatEvent, Message, ServerChatEvent } from '@shared/chat';
 import { chatWsUrl } from './chat-app';
 
+const chatEnabled = ref(true);
 const messages = ref<Message[]>([]);
 const draft = ref('');
 const typingUsers = ref<Record<string, string>>({});
@@ -11,6 +12,11 @@ const isConnected = ref(false);
 const reconnectAttempt = ref(0);
 const chatBody = ref<HTMLElement | null>(null);
 const draftInput = ref<HTMLInputElement | null>(null);
+const disableSendMessage = computed(() => {
+  if (!chatEnabled.value) return true;
+  return !draft.value.trim() || !isConnected.value
+});
+
 let shouldReconnect = true;
 let typingIdleTimer: number | undefined;
 let sentTypingState = false;
@@ -75,6 +81,9 @@ function connect() {
       messages.value = payload.messages;
       scrollToBottom(false);
       return;
+    }
+    if (payload.type === 'chat-enabled') {
+      chatEnabled.value = payload.enabled;
     }
 
     if (payload.type === 'message') {
@@ -295,7 +304,7 @@ onBeforeUnmount(() => {
             autocomplete="off"
           />
         </label>
-        <button class="send-button" type="submit" :disabled="!draft.trim() || !isConnected">
+        <button class="send-button" type="submit" :disabled="disableSendMessage">
           Send
         </button>
       </form>
