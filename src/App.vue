@@ -58,10 +58,12 @@ function scrollToBottom(smooth = true) {
 }
 
 function connect() {
+  console.log(`Connecting to ${chatWsUrl}...`);
   const connection = new WebSocket(chatWsUrl);
   socket.value = connection;
 
   connection.addEventListener('open', () => {
+    console.log(`Connected to chat websocket!`);
     isConnected.value = true;
     reconnectAttempt.value = 0;
   });
