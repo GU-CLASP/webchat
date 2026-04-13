@@ -12,6 +12,16 @@ let nextPersonNumber = 1;
 
 export const chatWss = new WebSocketServer({ noServer: true });
 
+let chatEnabledEvent: ServerChatEvent = {
+  type: 'chat-enabled',
+  enabled: false,
+}
+
+export function setChatEnabledEvent(event: ServerChatEvent) {
+  chatEnabledEvent = event;
+  broadcastPayload(event);
+}
+
 function logEvent(event: string, details: Record<string, unknown>) {
   console.log(
     JSON.stringify({
@@ -129,6 +139,7 @@ chatWss.on('connection', (socket) => {
   };
 
   socket.send(JSON.stringify(historyEvent));
+  socket.send(JSON.stringify(chatEnabledEvent));
 
   socket.on('message', (raw) => {
     let payload: ClientChatEvent;

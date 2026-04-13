@@ -2,7 +2,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import type { IncomingMessage } from 'node:http';
 import type { ServerAdminEvent } from '../shared/admin';
 import { getChatHistory, getParticipants } from './state';
-import { broadcastPayload, sendSystemMessage } from './chat';
+import { setChatEnabledEvent, sendSystemMessage } from './chat';
 import { ServerChatEvent } from '@shared/chat';
 
 export const adminWss = new WebSocketServer({ noServer: true });
@@ -47,7 +47,7 @@ adminWss.on('connection', (socket) => {
       sendSystemMessage(payload.content);
     }
     if (payload.type === 'chat-enabled') {
-      broadcastPayload(payload);
+      setChatEnabledEvent(payload);
     }
   });
 });
