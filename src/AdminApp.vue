@@ -5,7 +5,7 @@ import type { Message } from '@shared/chat';
 
 const adminWsUrl =
   import.meta.env.VITE_ADMIN_WS_URL ??
-  `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.hostname}:3001/ws/admin`;
+  `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.hostname}:5061/webchat/backend/ws/admin`;
 
 const participants = ref<Record<string, ParticipantState>>({});
 const messages = ref<Message[]>([]);

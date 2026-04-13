@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     allowedHosts: ['dev.clasp.gu.se'],
     host: '0.0.0.0',
-    port: 5173,
+    port: 5060,
   },
   build: {
     outDir: 'dist/webchat',
