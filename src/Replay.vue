@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, type Ref } from 'vue';
+import { ParticipantState } from '@shared/admin';
+import { computed, ComputedRef, onBeforeUnmount, ref, type Ref } from 'vue';
+import ParticipantCard from "./ParticipantCard.vue";
 
 type ReplayEvent = {
   raw: Record<string, unknown>;
@@ -72,14 +74,47 @@ const activeEvent = computed(() => {
   if (currentTime.value === null) {
     return null;
   }
+  return parsedEvents.value[currentIndex.value] ?? null;
+});
 
-  for (let index = parsedEvents.value.length - 1; index >= 0; index -= 1) {
-    if (parsedEvents.value[index].timeMs <= currentTime.value) {
-      return parsedEvents.value[index];
+const participantIds = computed(() => {
+  const set = new Set(parsedEvents.value.map(e => e.raw.senderId as string ?? ""));
+  return Array.from(set);
+});
+
+const participantStates = computed(() => {
+  const index = currentIndex.value;
+  const ids = participantIds.value;
+  const states: Record<string, ParticipantState> = {};
+
+  for (const id of ids) {
+    if (id === '') continue;
+    const props = new Set(['senderId', 'senderName', 'isTyping', 'draft', 'cursorStart', 'cursorEnd']);
+    const state: Record<string, any> = {
+      draft: "",
+      senderId: id,
+      senderName: "(Unknown)",
+      isTyping: false,
+      cursorStart: 0,
+      cursorEnd: 0,
+    };
+
+    for (let i = index; i >= 0; i--) {
+      if (parsedEvents.value[i]?.raw?.senderId === id) {
+        const event = parsedEvents.value[i].raw;
+        for (const prop of Array.from(props)) {
+          if (event[prop] !== undefined) {
+            state[prop] = event[prop];
+            props.delete(prop);
+          }
+        }
+      }
     }
+    states[id] = state as ParticipantState;
   }
-
-  return parsedEvents.value[0] ?? null;
+  return Object.values(states).sort((left, right) =>
+    right.senderId.localeCompare(left.senderId),
+  );
 });
 
 const elapsedMs = computed(() => {
@@ -297,12 +332,20 @@ onBeforeUnmount(() => {
           <span class="label">Active event timestamp</span>
           <p>{{ activeEvent?.timestamp ?? 'No active event' }}</p>
         </article>
-
+        <!--
         <article class="detail-card detail-card-wide">
           <span class="label">Active event payload</span>
           <pre>{{ activeEvent ? JSON.stringify(activeEvent.raw, null, 2) : 'Load a replay file to begin.' }}</pre>
         </article>
+        -->
       </div>
+    </section>
+    <section class="admin-grid">
+      <ParticipantCard v-for="participant in participantStates" :key="participant.senderId"
+        :allowHelpRequestedChip="false"
+        :participant="participant"
+        :showKeypress="false"
+      />
     </section>
   </main>
 </template>
