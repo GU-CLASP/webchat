@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import type { ParticipantState, ServerAdminEvent } from '@shared/admin';
+import { ParticipantState, ServerAdminEvent, formatTime } from '@shared/admin';
 import type { Message, ServerChatEvent } from '@shared/chat';
+import ParticipantCard from "./ParticipantCard.vue";
 
 const adminWsUrl =
   import.meta.env.VITE_ADMIN_WS_URL ??
@@ -110,42 +111,6 @@ function enableDisableChat() {
   adminSocket.value.send(JSON.stringify(payload));
 }
 
-function formatCursor(participant: ParticipantState) {
-  if (participant.cursorStart === null && participant.cursorEnd === null) {
-    return 'No selection';
-  }
-
-  if (participant.cursorStart === participant.cursorEnd) {
-    return `Cursor at ${participant.cursorStart}`;
-  }
-
-  return `Selection ${participant.cursorStart}-${participant.cursorEnd}`;
-}
-
-function renderDraftWithCursor(participant: ParticipantState) {
-  const start = participant.cursorStart ?? participant.draft.length;
-  const end = participant.cursorEnd ?? start;
-  const cursorStart = Math.min(start, end);
-  const cursorEnd = Math.max(start, end);
-  const before = participant.draft.slice(0, cursorStart);
-  const middle = participant.draft.slice(cursorStart, cursorEnd);
-  const after = participant.draft.slice(cursorEnd);
-
-  if (cursorStart === cursorEnd) {
-    return `${before}|${after}`;
-  }
-
-  return `${before}[${middle}]${after}`;
-}
-
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(new Date(value));
-}
-
 onMounted(() => {
   connect();
 });
@@ -206,55 +171,11 @@ onBeforeUnmount(() => {
       </article>
 
       <section class="admin-grid">
-      <article v-for="participant in orderedParticipants" :key="participant.senderId" class="admin-card">
-        <div class="admin-card-head">
-          <div>
-            <h2>{{ participant.senderName }}</h2>
-            <p class="participant-id">{{ participant.senderId }}</p>
-          </div>
-          <div class="participant-chips">
-            <span v-if="participant.isReady === false && !chatEnabled" class="chip help-chip active">
-              Help Requested
-            </span>
-            <span class="chip ready-chip" :class="{ active: participant.isReady }">
-              {{ participant.isReady ? 'Ready' : 'Not ready' }}
-            </span>
-            <span class="chip typing-chip" :class="{ active: participant.isTyping }">
-              {{ participant.isTyping ? 'Typing' : 'Idle' }}
-            </span>
-          </div>
-        </div>
-
-        <div class="field">
-          <span class="label">Draft</span>
-          <pre class="draft-preview">{{ renderDraftWithCursor(participant) }}</pre>
-        </div>
-
-        <div class="field">
-          <span class="label">Cursor</span>
-          <p>{{ formatCursor(participant) }}</p>
-        </div>
-
-        <div class="field">
-          <span class="label">Last Keypress</span>
-          <p v-if="participant.lastKeypress">
-            {{ participant.lastKeypress.key }} ({{ participant.lastKeypress.code }}) at
-            {{ formatTime(participant.lastKeypress.at) }}
-          </p>
-          <p v-else>No keypress captured yet</p>
-        </div>
-
-        <div class="field meta-grid">
-          <div>
-            <span class="label">Connected</span>
-            <p>{{ formatTime(participant.connectedAt) }}</p>
-          </div>
-          <div>
-            <span class="label">Last Seen</span>
-            <p>{{ formatTime(participant.lastSeenAt) }}</p>
-          </div>
-        </div>
-      </article>
+        <ParticipantCard v-for="participant in orderedParticipants" :key="participant.senderId"
+          :allowHelpRequestedChip="!chatEnabled"
+          :participant="participant"
+          :showKeypress="true"
+        />
       </section>
     </section>
   </main>

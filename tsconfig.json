@@ -3,6 +3,7 @@
     "target": "ES2023",
     "useDefineForClassFields": true,
     "module": "ESNext",
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "Node",
     "strict": true,
     "jsx": "preserve",

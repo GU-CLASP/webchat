@@ -39,3 +39,11 @@ export type ServerAdminEvent =
       type: 'participant-left';
       senderId: string;
     };
+
+export function formatTime(value: string) {
+  return new Intl.DateTimeFormat([], {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(new Date(value));
+}
