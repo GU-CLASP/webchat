@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
 
       <section class="admin-grid">
         <ParticipantCard v-for="participant in orderedParticipants" :key="participant.senderId"
-          :allowHelpRequestedChip="!chatEnabled"
+          :showPreparationChips="!chatEnabled"
           :participant="participant"
           :showKeypress="true"
         />

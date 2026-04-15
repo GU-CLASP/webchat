@@ -366,7 +366,7 @@ onBeforeUnmount(() => {
     <MessageLog :messages="messages" />
     <section class="admin-grid">
       <ParticipantCard v-for="participant in participantStates" :key="participant.senderId"
-        :allowHelpRequestedChip="false"
+        :showPreparationChips="false"
         :participant="participant"
         :showKeypress="false"
       />

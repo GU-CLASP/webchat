@@ -3,7 +3,7 @@ import { ParticipantState, formatTime } from '@shared/admin';
 
 defineProps<{
   participant: ParticipantState,
-  allowHelpRequestedChip: boolean,
+  showPreparationChips: boolean,
   showKeypress: boolean,
 }>()
 
@@ -45,10 +45,10 @@ function renderDraftWithCursor(participant: ParticipantState) {
         <p class="participant-id">{{ participant.senderId }}</p>
       </div>
       <div class="participant-chips">
-        <span v-if="participant.isReady === false && allowHelpRequestedChip" class="chip help-chip active">
+        <span v-if="participant.isReady === false && showPreparationChips" class="chip help-chip active">
             Help Requested
         </span>
-        <span class="chip ready-chip" :class="{ active: participant.isReady }">
+        <span v-if="showPreparationChips" class="chip ready-chip" :class="{ active: participant.isReady }">
             {{ participant.isReady ? 'Ready' : 'Not ready' }}
         </span>
         <span class="chip typing-chip" :class="{ active: participant.isTyping }">
