@@ -103,7 +103,10 @@ const participantStates = computed(() => {
       if (parsedEvents.value[i]?.raw?.senderId === id) {
         const event = parsedEvents.value[i].raw;
         for (const prop of Array.from(props)) {
-          if (event[prop] !== undefined) {
+          if (prop === "draft" && event.event === "message") {
+            state.draft = "";
+            props.delete(prop);
+          } else if (event[prop] !== undefined) {
             state[prop] = event[prop];
             props.delete(prop);
           }
