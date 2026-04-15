@@ -40,10 +40,7 @@ function renderDraftWithCursor(participant: ParticipantState) {
 <template>
   <article class="admin-card">
     <div class="admin-card-head">
-      <div>
-        <h2>{{ participant.senderName }}</h2>
-        <p class="participant-id">{{ participant.senderId }}</p>
-      </div>
+      <h2>{{ participant.senderName }}</h2>
       <div class="participant-chips">
         <span v-if="participant.isReady === false && showPreparationChips" class="chip help-chip active">
             Help Requested
