@@ -2,6 +2,8 @@
 import { ParticipantState } from '@shared/admin';
 import { computed, ComputedRef, onBeforeUnmount, ref, type Ref } from 'vue';
 import ParticipantCard from "./ParticipantCard.vue";
+import MessageLog from './MessageLog.vue';
+import { Message } from '@shared/chat';
 
 type ReplayEvent = {
   raw: Record<string, unknown>;
@@ -118,6 +120,24 @@ const participantStates = computed(() => {
   return Object.values(states).sort((left, right) =>
     right.senderId.localeCompare(left.senderId),
   );
+});
+
+const messages = computed(() => {
+  const index = currentIndex.value;
+  const result: Message[] = [];
+  for (let i = 0; i <= index; i++) {
+    const event = parsedEvents.value[i].raw;
+    if (event.content) {
+      result.push({
+        id: i.toString(),
+        senderId: event.senderId as string,
+        senderName: event.senderName as string,
+        content: event.content as string,
+        sentAt: event.timestamp as string,
+      });
+    }
+  }
+  return result;
 });
 
 const elapsedMs = computed(() => {
@@ -343,6 +363,7 @@ onBeforeUnmount(() => {
         -->
       </div>
     </section>
+    <MessageLog :messages="messages" />
     <section class="admin-grid">
       <ParticipantCard v-for="participant in participantStates" :key="participant.senderId"
         :allowHelpRequestedChip="false"

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { ParticipantState, ServerAdminEvent, formatTime } from '@shared/admin';
+import { ParticipantState, ServerAdminEvent } from '@shared/admin';
 import type { Message, ServerChatEvent } from '@shared/chat';
 import ParticipantCard from "./ParticipantCard.vue";
+import MessageLog from './MessageLog.vue';
 
 const adminWsUrl =
   import.meta.env.VITE_ADMIN_WS_URL ??
@@ -158,16 +159,7 @@ onBeforeUnmount(() => {
             Send to all users
           </button>
         </form>
-
-        <div class="message-feed">
-          <article v-for="message in messages" :key="message.id" class="message-card">
-            <div class="message-card-head">
-              <strong>{{ message.senderName }}</strong>
-              <span>{{ formatTime(message.sentAt) }}</span>
-            </div>
-            <p>{{ message.content }}</p>
-          </article>
-        </div>
+        <MessageLog :messages="messages" />
       </article>
 
       <section class="admin-grid">
