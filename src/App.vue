@@ -250,6 +250,7 @@ function sendMessage() {
   draft.value = '';
   window.clearTimeout(typingIdleTimer);
   emitTyping(false);
+  draftInput.value!.focus();
 }
 
 function formatTime(timestamp: string) {
