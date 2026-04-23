@@ -256,6 +256,18 @@ chatWss.on('connection', (socket) => {
       return;
     }
 
+    if (payload.type === 'image-click') {
+      logEvent('image-click', {
+        senderId: payload.senderId,
+        senderName,
+        imageId: payload.imageId,
+        x: payload.x,
+        y: payload.y,
+        action: payload.action,
+      });
+      return;
+    }
+
     if (payload.type !== 'message' || !payload.content.trim()) {
       return;
     }

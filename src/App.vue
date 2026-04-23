@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
 import type { ClientChatEvent, Message, ServerChatEvent } from '@shared/chat';
 import { chatWsUrl } from './chat-app';
+import ClickExperiment from './ClickExperiment.vue';
 
 const chatEnabled = ref(true);
 const messages = ref<Message[]>([]);
@@ -23,6 +24,7 @@ let shouldReconnect = true;
 let typingIdleTimer: number | undefined;
 let sentTypingState = false;
 
+const CLICK_EXPERIMENT = import.meta.env.VITE_CLICK_EXPERIMENT === 'true';
 const title = 'DivCon Chat';
 const subtitle = computed(() => {
   if (!isConnected.value) {
@@ -166,6 +168,13 @@ function sendClientEvent(payload: ClientChatEvent) {
   socket.value.send(JSON.stringify(payload));
 }
 
+function handleClickExperimentEvent(payload: Extract<ClientChatEvent, { type: 'image-click' }>) {
+  sendClientEvent({
+    ...payload,
+    type: 'image-click',
+  });
+}
+
 function setReady(value: boolean | null) {
   isReady.value = value;
   sendClientEvent({
@@ -283,100 +292,109 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="shell">
-    <section class="phone-frame" :class="{ disabled: !chatEnabled }">
-      <div
-        v-if="!chatEnabled"
-        class="chat-disabled-overlay"
-        role="alert"
-        aria-live="polite"
-      >
-        <div class="chat-disabled-card">
-          <p>Chat is currently disabled by an admin</p>
-          <button
-            class="button-toggle ready-toggle"
-            type="button"
-            :class="{ active: isReady == true }"
-            :disabled="!isConnected"
-            @click="toggleReady"
-          >
-            {{ isReady === true ? 'Ready!' : 'Mark as ready' }}
-          </button>
-          <button
-            class="button-toggle help-toggle"
-            type="button"
-            :class="{ active: isReady === false }"
-            :disabled="!isConnected"
-            @click="toggleHelp"
-          >
-            {{ isReady === false ? 'Help requested!' : 'Request help' }}
-          </button>
-        </div>
-      </div>
+    <div class="chat-layout">
+      <ClickExperiment
+        :enabled="CLICK_EXPERIMENT"
+        :sender-id="currentUserId"
+        :sender-name="assignedSenderName"
+        @click-event="handleClickExperimentEvent"
+      />
 
-      <header class="chat-header">
-        <div class="avatar">DS</div>
-        <div class="chat-meta">
-          <h1>{{ title }}</h1>
-          <p>{{ subtitle }}</p>
-        </div>
-      </header>
-
-      <div class="chat-body" ref="chatBody">
-        <div class="day-pill">{{ today }}</div>
-
-        <article
-          v-for="message in messages"
-          :key="message.id"
-          class="message-row"
-          :class="{ mine: message.senderId === currentUserId }"
+      <section class="phone-frame" :class="{ disabled: !chatEnabled }">
+        <div
+          v-if="!chatEnabled"
+          class="chat-disabled-overlay"
+          role="alert"
+          aria-live="polite"
         >
-          <div class="bubble">
-            <p class="sender" v-if="message.senderId !== currentUserId">{{ message.senderName }}</p>
-            <p class="content">{{ message.content }}</p>
-            <span class="meta">{{ formatTime(message.sentAt) }}</span>
+          <div class="chat-disabled-card">
+            <p>Chat is currently disabled by an admin</p>
+            <button
+              class="button-toggle ready-toggle"
+              type="button"
+              :class="{ active: isReady == true }"
+              :disabled="!isConnected"
+              @click="toggleReady"
+            >
+              {{ isReady === true ? 'Ready!' : 'Mark as ready' }}
+            </button>
+            <button
+              class="button-toggle help-toggle"
+              type="button"
+              :class="{ active: isReady === false }"
+              :disabled="!isConnected"
+              @click="toggleHelp"
+            >
+              {{ isReady === false ? 'Help requested!' : 'Request help' }}
+            </button>
           </div>
-        </article>
+        </div>
 
-        <article
-          v-for="name in Object.values(typingUsers)"
-          :key="name"
-          class="message-row"
-        >
-          <div class="bubble typing-bubble">
-            <p class="sender">{{ name }}</p>
-            <div class="typing-indicator" aria-label="Typing indicator">
-              <span></span>
-              <span></span>
-              <span></span>
+        <header class="chat-header">
+          <div class="avatar">DS</div>
+          <div class="chat-meta">
+            <h1>{{ title }}</h1>
+            <p>{{ subtitle }}</p>
+          </div>
+        </header>
+
+        <div class="chat-body" ref="chatBody">
+          <div class="day-pill">{{ today }}</div>
+
+          <article
+            v-for="message in messages"
+            :key="message.id"
+            class="message-row"
+            :class="{ mine: message.senderId === currentUserId }"
+          >
+            <div class="bubble">
+              <p class="sender" v-if="message.senderId !== currentUserId">{{ message.senderName }}</p>
+              <p class="content">{{ message.content }}</p>
+              <span class="meta">{{ formatTime(message.sentAt) }}</span>
             </div>
-          </div>
-        </article>
-      </div>
+          </article>
 
-      <form class="composer" @submit.prevent="sendMessage">
-        <!--
-        <button class="ghost-button" type="button" aria-label="Attach file">+</button>
-        -->
-        <label class="composer-field">
-          <input
-            ref="draftInput"
-            v-model="draft"
-            @input="handleDraftInput"
-            @click="handleCursorMove"
-            @keydown="handleKeydown"
-            @keyup="handleCursorMove"
-            @select="handleCursorMove"
-            type="text"
-            name="message"
-            placeholder="Write a message"
-            autocomplete="off"
-            :disabled="!chatEnabled"
-          />
-        </label>
-        <button class="send-button" type="submit" :disabled="disableSendMessage">
-          Send
-        </button>
-      </form>
-    </section>
+          <article
+            v-for="name in Object.values(typingUsers)"
+            :key="name"
+            class="message-row"
+          >
+            <div class="bubble typing-bubble">
+              <p class="sender">{{ name }}</p>
+              <div class="typing-indicator" aria-label="Typing indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <form class="composer" @submit.prevent="sendMessage">
+          <!--
+          <button class="ghost-button" type="button" aria-label="Attach file">+</button>
+          -->
+          <label class="composer-field">
+            <input
+              ref="draftInput"
+              v-model="draft"
+              @input="handleDraftInput"
+              @click="handleCursorMove"
+              @keydown="handleKeydown"
+              @keyup="handleCursorMove"
+              @select="handleCursorMove"
+              type="text"
+              name="message"
+              placeholder="Write a message"
+              autocomplete="off"
+              :disabled="!chatEnabled"
+            />
+          </label>
+          <button class="send-button" type="submit" :disabled="disableSendMessage">
+            Send
+          </button>
+        </form>
+      </section>
+    </div>
   </main>
 </template>

@@ -54,6 +54,14 @@ export type ClientChatEvent =
       senderId: string;
       senderName: string;
       isReady: boolean | null;
+    }
+  | {
+      type: 'image-click';
+      senderId: string;
+      imageId: 'pic1' | 'pic2';
+      x: number;
+      y: number;
+      action: 'add' | 'remove';
     };
 
 export type ServerChatEvent =

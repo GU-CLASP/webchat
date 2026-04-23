@@ -31,6 +31,12 @@ input {
   padding: 24px;
 }
 
+.chat-layout {
+  width: min(100%, 460px);
+  display: grid;
+  gap: 18px;
+}
+
 .phone-frame {
   position: relative;
   width: min(100%, 460px);
@@ -336,6 +342,11 @@ input {
 @media (max-width: 640px) {
   .shell {
     padding: 0;
+  }
+
+  .chat-layout {
+    width: 100%;
+    gap: 0;
   }
 
   .phone-frame {
