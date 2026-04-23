@@ -158,6 +158,13 @@ chatWss.on('connection', (socket) => {
         senderName,
       });
       updateParticipant(payload.senderId, senderName, {});
+      socket.send(
+        JSON.stringify({
+          type: 'identity',
+          senderId: payload.senderId,
+          senderName,
+        } satisfies ServerChatEvent),
+      );
     }
 
     if (payload.type === 'keypress') {

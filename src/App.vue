@@ -13,6 +13,7 @@ const isReady: Ref<boolean | null, boolean | null> = ref(null);
 const reconnectAttempt = ref(0);
 const chatBody = ref<HTMLElement | null>(null);
 const draftInput = ref<HTMLInputElement | null>(null);
+const assignedSenderName = ref<string | null>(null);
 const disableSendMessage = computed(() => {
   if (!chatEnabled.value) return true;
   return !draft.value.trim() || !isConnected.value
@@ -90,6 +91,12 @@ function connect() {
       scrollToBottom(false);
       return;
     }
+    if (payload.type === 'identity') {
+      if (payload.senderId === currentUserId) {
+        assignedSenderName.value = payload.senderName;
+      }
+      return;
+    }
     if (payload.type === 'chat-enabled') {
       chatEnabled.value = payload.enabled;
     }
@@ -123,6 +130,7 @@ function connect() {
     isConnected.value = false;
     socket.value = null;
     typingUsers.value = {};
+    assignedSenderName.value = null;
 
     if (!shouldReconnect) {
       return;

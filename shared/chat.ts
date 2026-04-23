@@ -62,6 +62,11 @@ export type ServerChatEvent =
       messages: Message[];
     }
   | {
+      type: 'identity';
+      senderId: string;
+      senderName: string;
+    }
+  | {
       type: 'message';
       message: Message;
     }
