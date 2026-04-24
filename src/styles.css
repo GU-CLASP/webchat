@@ -40,6 +40,11 @@ input {
   gap: 24px;
 }
 
+.chat-layout--solo {
+  width: min(100%, 460px);
+  grid-template-columns: minmax(0, 460px);
+}
+
 .phone-frame {
   position: relative;
   width: min(100%, 460px);

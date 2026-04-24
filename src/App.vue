@@ -292,7 +292,7 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="shell">
-    <div class="chat-layout">
+    <div class="chat-layout" :class="{ 'chat-layout--solo': !CLICK_EXPERIMENT }">
       <ClickExperiment
         :enabled="CLICK_EXPERIMENT"
         :sender-id="currentUserId"
