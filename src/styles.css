@@ -32,9 +32,12 @@ input {
 }
 
 .chat-layout {
-  width: min(100%, 460px);
+  width: min(100%, 1200px);
   display: grid;
-  gap: 18px;
+  grid-template-columns: minmax(0, calc(100dvw - 532px)) minmax(0, 460px);
+  align-items: start;
+  justify-content: center;
+  gap: 24px;
 }
 
 .phone-frame {

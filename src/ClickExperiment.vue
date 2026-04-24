@@ -157,7 +157,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .click-experiment {
-  width: min(100%, 460px);
+  width: 100%;
   display: grid;
   gap: 14px;
 }
