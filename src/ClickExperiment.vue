@@ -4,6 +4,7 @@ import pic1 from './pic1.png';
 import pic2 from './pic2.png';
 
 type ClickExperimentEvent = {
+  type: 'image-click';
   senderId: string;
   imageId: 'pic1' | 'pic2';
   x: number;
@@ -82,6 +83,7 @@ function addMarker(imageId: 'pic1' | 'pic2', event: MouseEvent) {
   };
 
   emit('clickEvent', {
+    type: 'image-click',
     senderId: props.senderId,
     imageId,
     x,
@@ -102,6 +104,7 @@ function removeMarker(imageId: 'pic1' | 'pic2', markerId: string) {
   };
 
   emit('clickEvent', {
+    type: 'image-click',
     senderId: props.senderId,
     imageId,
     x: marker.x,
