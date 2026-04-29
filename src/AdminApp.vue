@@ -29,12 +29,18 @@ const readyCount = computed(() =>
 );
 
 function connect() {
-  const socket = new WebSocket(adminWsUrl);
+  const url = new URL(window.location.href);
+  const socket = new WebSocket(adminWsUrl + "?password=" + url.searchParams.get('password'));
   adminSocket.value = socket;
 
   socket.addEventListener('open', () => {
+    console.log("WS Open");
     isConnected.value = true;
     reconnectAttempt.value = 0;
+  });
+
+  socket.addEventListener('error', (event) => {
+    console.log(event);
   });
 
   socket.addEventListener('message', (event) => {
@@ -68,7 +74,9 @@ function connect() {
     }
   });
 
-  socket.addEventListener('close', () => {
+  socket.addEventListener('close', (e) => {
+    console.log("WS Close");
+    console.log(e);
     isConnected.value = false;
     if (adminSocket.value === socket) {
       adminSocket.value = null;
