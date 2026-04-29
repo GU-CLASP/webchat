@@ -24,6 +24,7 @@ let shouldReconnect = true;
 let typingIdleTimer: number | undefined;
 let sentTypingState = false;
 
+const TYPING_TIMEOUT = import.meta.env.VITE_TYPING_TIMEOUT || 1200;
 const CLICK_EXPERIMENT = import.meta.env.VITE_CLICK_EXPERIMENT === 'true';
 const title = 'DivCon Chat';
 const subtitle = computed(() => {
@@ -221,7 +222,7 @@ function handleDraftInput() {
   window.clearTimeout(typingIdleTimer);
   typingIdleTimer = window.setTimeout(() => {
     emitTyping(false);
-  }, 1200);
+  }, TYPING_TIMEOUT);
 }
 
 function handleKeydown(event: KeyboardEvent) {
