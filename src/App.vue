@@ -25,7 +25,8 @@ let typingIdleTimer: number | undefined;
 let sentTypingState = false;
 
 const TYPING_TIMEOUT = import.meta.env.VITE_TYPING_TIMEOUT || 1200;
-const CLICK_EXPERIMENT = import.meta.env.VITE_CLICK_EXPERIMENT === 'true';
+const CLICK_EXPERIMENT = import.meta.env.VITE_CLICK_EXPERIMENT;
+const CLICK_EXPERIMENT_ENABLED = CLICK_EXPERIMENT === 'a' || CLICK_EXPERIMENT === 'b';
 const title = 'DivCon Chat';
 const subtitle = computed(() => {
   if (!isConnected.value) {
@@ -293,9 +294,10 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="shell">
-    <div class="chat-layout" :class="{ 'chat-layout--solo': !CLICK_EXPERIMENT }">
+    <div class="chat-layout" :class="{ 'chat-layout--solo': !CLICK_EXPERIMENT_ENABLED }">
       <ClickExperiment
-        :enabled="CLICK_EXPERIMENT"
+        :enabled="CLICK_EXPERIMENT_ENABLED"
+        :scenario="CLICK_EXPERIMENT"
         :sender-id="currentUserId"
         :sender-name="assignedSenderName"
         @click-event="handleClickExperimentEvent"

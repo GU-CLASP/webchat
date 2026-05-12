@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import pic1 from './pic1.png';
-import pic2 from './pic2.png';
+import pic1a from './pic1a.png';
+import pic2a from './pic2a.png';
+import pic1b from './pic1b.png';
+import pic2b from './pic2b.png';
 
 type ClickExperimentEvent = {
   type: 'image-click';
@@ -20,6 +22,7 @@ type Marker = {
 
 const props = defineProps<{
   enabled: boolean;
+  scenario: string;
   senderId: string;
   senderName: string | null;
 }>();
@@ -38,17 +41,31 @@ const images = [
   {
     id: 'pic1' as const,
     label: 'Person1',
-    src: pic1,
+    scenario: 'a',
+    src: pic1a,
   },
   {
     id: 'pic2' as const,
     label: 'Person2',
-    src: pic2,
+    scenario: 'a',
+    src: pic2a,
+  },
+  {
+    id: 'pic1' as const,
+    label: 'Person1',
+    scenario: 'b',
+    src: pic1b,
+  },
+  {
+    id: 'pic2' as const,
+    label: 'Person2',
+    scenario: 'b',
+    src: pic2b,
   },
 ];
 
 const shouldShow = computed(() => props.enabled && !isPhone.value);
-const visibleImage = computed(() => images.find((image) => image.label === props.senderName) ?? null);
+const visibleImage = computed(() => images.find((image) => image.label === props.senderName && image.scenario == props.scenario) ?? null);
 
 function updateDeviceState() {
   isPhone.value =
