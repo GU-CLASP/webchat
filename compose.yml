@@ -22,6 +22,6 @@ services:
     volumes:
       - ./dist:/app/frontend:z
     command: >
-      sh -lc "python -m http.server 5060"
+      sh -lc "python -m http.server 5062"
     environment:
       - UNUSED=test

@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
-  base: '/webchat/',
+  base: '/clickexp/',
   plugins: [vue()],
   resolve: {
     alias: {
@@ -14,10 +14,10 @@ export default defineConfig({
   server: {
     allowedHosts: ['dev.clasp.gu.se'],
     host: '0.0.0.0',
-    port: 5060,
+    port: 5062,
   },
   build: {
-    outDir: 'dist/webchat',
+    outDir: 'dist/clickexp',
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),

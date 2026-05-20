@@ -10,7 +10,7 @@ const server = createServer((request, response) => {
     JSON.stringify({
       status: 'ok',
       websocket: true,
-      endpoints: ['/webchat/backend/ws/chat', '/webchat/backend/ws/admin'],
+      endpoints: ['/clickexp/backend/ws/chat', '/clickexp/backend/ws/admin'],
       path: request.url ?? '/',
     }),
   );
@@ -32,12 +32,12 @@ function rejectUpgrade(socket: Duplex, statusCode: number, statusText: string) {
 server.on('upgrade', (request, socket, head) => {
   const url = new URL(request.url ?? '/', 'http://localhost');
 
-  if (url.pathname === '/webchat/backend/ws/chat') {
+  if (url.pathname === '/clickexp/backend/ws/chat') {
     handleChatUpgrade(request, socket, head);
     return;
   }
 
-  if (url.pathname === '/webchat/backend/ws/admin') {
+  if (url.pathname === '/clickexp/backend/ws/admin') {
     if (process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD !== url.searchParams.get('password')) {
       console.log("Admin entered wrong password and was rejected.");
       rejectUpgrade(socket, 401, 'Unauthorized');
