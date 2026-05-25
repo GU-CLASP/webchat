@@ -52,7 +52,7 @@ function getAssignedName(senderId: string) {
     return existing;
   }
 
-  const name = `Person${nextPersonNumber}`;
+  const name = `Person${String.fromCharCode(nextPersonNumber)}`;
   nextPersonNumber += 1;
   assignedNames.set(senderId, name);
   return name;

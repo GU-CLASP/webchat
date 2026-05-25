@@ -311,7 +311,10 @@ onBeforeUnmount(() => {
           aria-live="polite"
         >
           <div class="chat-disabled-card">
-            <p>Chat is currently disabled by an admin</p>
+            <p>
+              Chat is currently disabled by an admin<br />
+              <span class="small-note">You are {{ assignedSenderName }}</span>
+            </p>
             <button
               class="button-toggle ready-toggle"
               type="button"

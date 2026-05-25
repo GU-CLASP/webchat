@@ -96,6 +96,10 @@ input {
   line-height: 1.4;
 }
 
+.small-note {
+  font-size: 0.7rem;
+}
+
 .button-toggle {
   margin-top: 14px;
   min-width: 160px;
