@@ -8,7 +8,7 @@ import { appendMessage, getChatHistory, removeParticipant, upsertParticipant } f
 const clientMeta = new WeakMap<WebSocket, { senderId: string; senderName: string }>();
 const typingUsers = new Map<string, string>();
 const assignedNames = new Map<string, string>();
-let nextPersonNumber = 1;
+let nextPersonNumber = 65;
 
 export const chatWss = new WebSocketServer({ noServer: true });
 
