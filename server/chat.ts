@@ -251,7 +251,7 @@ chatWss.on('connection', (socket) => {
       });
 
       updateParticipant(payload.senderId, senderName, {
-        isReady: payload.isReady,
+        isReady: payload.isReady ?? undefined,
       });
       return;
     }
