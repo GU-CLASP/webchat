@@ -14,7 +14,29 @@ const isReady: Ref<boolean | null, boolean | null> = ref(null);
 const reconnectAttempt = ref(0);
 const chatBody = ref<HTMLElement | null>(null);
 const draftInput = ref<HTMLInputElement | null>(null);
-const assignedSenderName = ref<string | null>(null);
+const CURRENT_USER_ID_STORAGE_KEY = 'webchat.currentUserId';
+const ASSIGNED_SENDER_NAME_STORAGE_KEY = 'webchat.assignedSenderName';
+
+function getStoredValue(key: string) {
+  return localStorage.getItem(key) || null;
+}
+
+function setStoredValue(key: string, value: string) {
+  localStorage.setItem(key, value);
+}
+
+function getCurrentUserId() {
+  const storedUserId = getStoredValue(CURRENT_USER_ID_STORAGE_KEY);
+  if (storedUserId) {
+    return storedUserId;
+  }
+
+  const userId = crypto.randomUUID();
+  setStoredValue(CURRENT_USER_ID_STORAGE_KEY, userId);
+  return userId;
+}
+
+const assignedSenderName = ref<string | null>(getStoredValue(ASSIGNED_SENDER_NAME_STORAGE_KEY));
 const disableSendMessage = computed(() => {
   if (!chatEnabled.value) return true;
   return !draft.value.trim() || !isConnected.value
@@ -48,7 +70,7 @@ const today = new Intl.DateTimeFormat('en', {
   month: 'long',
   day: 'numeric',
 }).format(new Date());
-const currentUserId = crypto.randomUUID();
+const currentUserId = getCurrentUserId();
 const currentUserName = 'You';
 
 const timeFormatter = new Intl.DateTimeFormat([], {
@@ -98,6 +120,7 @@ function connect() {
     if (payload.type === 'identity') {
       if (payload.senderId === currentUserId) {
         assignedSenderName.value = payload.senderName;
+        setStoredValue(ASSIGNED_SENDER_NAME_STORAGE_KEY, payload.senderName);
       }
       return;
     }
@@ -134,7 +157,6 @@ function connect() {
     isConnected.value = false;
     socket.value = null;
     typingUsers.value = {};
-    assignedSenderName.value = null;
 
     if (!shouldReconnect) {
       return;
