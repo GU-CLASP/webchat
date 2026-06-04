@@ -142,31 +142,31 @@ onBeforeUnmount(() => {
       </p>
     </header>
 
+    <section class="send-message">
+      <p class="ready-summary">
+        {{ readyCount }} of {{ orderedParticipants.length }} users marked ready
+        <input type="checkbox" @change="enableDisableChat" v-model="chatEnabled" />Enable chat
+      </p>
+
+      <form class="broadcast-form" @submit.prevent="sendBroadcast">
+        <input
+          type="text"
+          id="broadcast-message"
+          v-model="draft"
+          class="broadcast-input"
+          placeholder="Send a message to everyone in chat" />
+        <button class="broadcast-button" type="submit" :disabled="!draft.trim() || !isConnected">
+          Broadcast
+        </button>
+      </form>
+    </section>
+
     <section class="admin-layout">
       <article class="message-panel">
         <div class="message-panel-head">
           <h2>Shared Chat View</h2>
           <p>{{ messages.length }} messages mirrored from the main chat</p>
         </div>
-
-        <p class="ready-summary">
-          {{ readyCount }} of {{ orderedParticipants.length }} users marked ready
-        </p>
-
-        <input type="checkbox" @change="enableDisableChat" v-model="chatEnabled" />Enable chat
-        <form class="broadcast-form" @submit.prevent="sendBroadcast">
-          <label class="label" for="broadcast-message">Broadcast message</label>
-          <textarea
-            id="broadcast-message"
-            v-model="draft"
-            class="broadcast-input"
-            rows="3"
-            placeholder="Send a message to everyone in chat"
-          />
-          <button class="broadcast-button" type="submit" :disabled="!draft.trim() || !isConnected">
-            Send to all users
-          </button>
-        </form>
         <MessageLog :messages="messages" />
       </article>
 
