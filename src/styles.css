@@ -1,4 +1,5 @@
 :root {
+  --app-viewport-height: 100vh;
   color-scheme: light;
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   background:
@@ -7,16 +8,32 @@
   color: #1f2d3d;
 }
 
+@supports (height: 100dvh) {
+  :root {
+    --app-viewport-height: 100dvh;
+  }
+}
+
 * {
   box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: var(--app-viewport-height);
   background:
     radial-gradient(circle at center, rgba(255, 255, 255, 0.45), transparent 55%),
     linear-gradient(180deg, #6eb5ea 0%, #d8ebf7 40%, #dcecf7 100%);
+}
+
+#app {
+  min-height: 100vh;
+  min-height: var(--app-viewport-height);
 }
 
 button,
@@ -26,6 +43,7 @@ input {
 
 .shell {
   min-height: 100vh;
+  min-height: var(--app-viewport-height);
   display: grid;
   place-items: center;
   padding: 24px;
@@ -49,8 +67,10 @@ input {
   position: relative;
   width: min(100%, 460px);
   height: min(92vh, 860px);
+  height: min(calc(var(--app-viewport-height) - 48px), 860px);
   display: grid;
   grid-template-rows: auto 1fr auto;
+  min-height: 0;
   border-radius: 32px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.65);
@@ -171,7 +191,9 @@ input {
 }
 
 .chat-body {
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 18px 14px 22px;
   background:
     linear-gradient(rgba(240, 247, 252, 0.88), rgba(240, 247, 252, 0.88)),
@@ -352,18 +374,33 @@ input {
 }
 
 @media (max-width: 640px) {
+  html,
+  body,
+  #app {
+    height: var(--app-viewport-height);
+    min-height: var(--app-viewport-height);
+    overflow: hidden;
+  }
+
   .shell {
+    height: var(--app-viewport-height);
+    min-height: 0;
+    overflow: hidden;
     padding: 0;
   }
 
   .chat-layout {
     width: 100%;
+    height: 100%;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0;
   }
 
   .phone-frame {
     width: 100%;
     height: 100vh;
+    height: var(--app-viewport-height);
+    max-height: none;
     border-radius: 0;
     border: 0;
   }

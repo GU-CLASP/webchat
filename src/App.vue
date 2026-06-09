@@ -45,6 +45,7 @@ const disableSendMessage = computed(() => {
 let shouldReconnect = true;
 let typingIdleTimer: number | undefined;
 let sentTypingState = false;
+let viewportResizeFrame: number | undefined;
 
 const TYPING_TIMEOUT = import.meta.env.VITE_TYPING_TIMEOUT || 1200;
 const CLICK_EXPERIMENT = import.meta.env.VITE_CLICK_EXPERIMENT;
@@ -88,6 +89,41 @@ function scrollToBottom(smooth = true) {
       top: chatBody.value.scrollHeight,
       behavior: smooth ? 'smooth' : 'auto',
     });
+  });
+}
+
+function isChatNearBottom() {
+  if (!chatBody.value) {
+    return true;
+  }
+
+  const distanceFromBottom =
+    chatBody.value.scrollHeight - chatBody.value.scrollTop - chatBody.value.clientHeight;
+  return distanceFromBottom < 80;
+}
+
+function setAppViewportHeight() {
+  const measuredHeight = window.visualViewport?.height ?? window.innerHeight;
+  document.documentElement.style.setProperty(
+    '--app-viewport-height',
+    `${Math.max(1, Math.round(measuredHeight))}px`,
+  );
+}
+
+function syncViewportSize() {
+  const keepBottomVisible = document.activeElement === draftInput.value || isChatNearBottom();
+
+  if (viewportResizeFrame !== undefined) {
+    window.cancelAnimationFrame(viewportResizeFrame);
+  }
+
+  viewportResizeFrame = window.requestAnimationFrame(() => {
+    viewportResizeFrame = undefined;
+    setAppViewportHeight();
+
+    if (keepBottomVisible) {
+      scrollToBottom(false);
+    }
   });
 }
 
@@ -303,11 +339,22 @@ watch(messages, () => {
 });
 
 onMounted(() => {
+  syncViewportSize();
+  window.addEventListener('resize', syncViewportSize);
+  window.visualViewport?.addEventListener('resize', syncViewportSize);
+  window.visualViewport?.addEventListener('scroll', syncViewportSize);
   connect();
 });
 
 onBeforeUnmount(() => {
   shouldReconnect = false;
+  window.removeEventListener('resize', syncViewportSize);
+  window.visualViewport?.removeEventListener('resize', syncViewportSize);
+  window.visualViewport?.removeEventListener('scroll', syncViewportSize);
+  if (viewportResizeFrame !== undefined) {
+    window.cancelAnimationFrame(viewportResizeFrame);
+  }
+  document.documentElement.style.removeProperty('--app-viewport-height');
   window.clearTimeout(typingIdleTimer);
   emitTyping(false);
   socket.value?.close();
@@ -408,6 +455,8 @@ onBeforeUnmount(() => {
               v-model="draft"
               @input="handleDraftInput"
               @click="handleCursorMove"
+              @focus="syncViewportSize"
+              @blur="syncViewportSize"
               @keydown="handleKeydown"
               @keyup="handleCursorMove"
               @select="handleCursorMove"
