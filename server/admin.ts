@@ -1,9 +1,9 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import type { IncomingMessage } from 'node:http';
 import type { ServerAdminEvent } from '../shared/admin';
-import { getChatHistory, getParticipants } from './state';
+import type { ServerChatEvent } from '../shared/chat';
+import { getAdminNotifications, getChatHistory, getParticipants } from './state';
 import { setChatEnabledEvent, sendSystemMessage } from './chat';
-import { ServerChatEvent } from '@shared/chat';
 
 export const adminWss = new WebSocketServer({ noServer: true });
 
@@ -32,6 +32,7 @@ adminWss.on('connection', (socket) => {
     type: 'snapshot',
     participants: getParticipants(),
     messages: getChatHistory(),
+    notifications: getAdminNotifications(),
   });
 
   socket.on('message', (raw) => {

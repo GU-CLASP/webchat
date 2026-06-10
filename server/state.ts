@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import type { Message } from '../shared/chat';
-import type { ParticipantState } from '../shared/admin';
+import type { AdminNotification, ParticipantState } from '../shared/admin';
 
 export const participantState = new Map<string, ParticipantState>();
 const chatHistory: Message[] = [];
+const adminNotifications: AdminNotification[] = [];
+const maxAdminNotifications = 100;
 
 export function upsertParticipant(
   senderId: string,
@@ -44,4 +46,22 @@ export function getChatHistory() {
 
 export function appendMessage(message: Message) {
   chatHistory.push(message);
+}
+
+export function appendAdminNotification(
+  notification: Omit<AdminNotification, 'id' | 'createdAt'>,
+) {
+  const nextNotification: AdminNotification = {
+    id: randomUUID(),
+    createdAt: new Date().toISOString(),
+    ...notification,
+  };
+
+  adminNotifications.unshift(nextNotification);
+  adminNotifications.splice(maxAdminNotifications);
+  return nextNotification;
+}
+
+export function getAdminNotifications() {
+  return adminNotifications;
 }

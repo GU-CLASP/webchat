@@ -56,6 +56,12 @@ export type ClientChatEvent =
       isReady: boolean | null;
     }
   | {
+      type: 'app-lifecycle';
+      senderId: string;
+      senderName: string;
+      status: 'open' | 'left';
+    }
+  | {
       type: 'image-click';
       senderId: string;
       imageId: 'pic1' | 'pic2';

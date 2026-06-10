@@ -21,11 +21,20 @@ export type ParticipantState = {
   lastSeenAt: string;
 };
 
+export type AdminNotification = {
+  id: string;
+  kind: 'app-open' | 'app-left';
+  senderId: string;
+  senderName: string;
+  createdAt: string;
+};
+
 export type ServerAdminEvent =
   | {
       type: 'snapshot';
       participants: ParticipantState[];
       messages: Message[];
+      notifications: AdminNotification[];
     }
   | {
       type: 'participant-state';
@@ -34,6 +43,10 @@ export type ServerAdminEvent =
   | {
       type: 'message';
       message: Message;
+    }
+  | {
+      type: 'notification';
+      notification: AdminNotification;
     }
   | {
       type: 'participant-left';

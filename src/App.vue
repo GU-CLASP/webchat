@@ -45,6 +45,7 @@ const disableSendMessage = computed(() => {
 let shouldReconnect = true;
 let typingIdleTimer: number | undefined;
 let sentTypingState = false;
+let sentLeaveNotice = false;
 
 const TYPING_TIMEOUT = import.meta.env.VITE_TYPING_TIMEOUT || 1200;
 const CLICK_EXPERIMENT = import.meta.env.VITE_CLICK_EXPERIMENT;
@@ -100,6 +101,9 @@ function connect() {
     console.log(`Connected to chat websocket!`);
     isConnected.value = true;
     reconnectAttempt.value = 0;
+    sentLeaveNotice = false;
+
+    sendAppLifecycle('open');
 
     sendClientEvent({
       type: 'ready-state',
@@ -190,6 +194,33 @@ function sendClientEvent(payload: ClientChatEvent) {
   }
 
   socket.value.send(JSON.stringify(payload));
+}
+
+function sendAppLifecycle(status: 'open' | 'left') {
+  sendClientEvent({
+    type: 'app-lifecycle',
+    senderId: currentUserId,
+    senderName: currentUserName,
+    status,
+  });
+}
+
+function notifyAppLeft() {
+  if (sentLeaveNotice || !socket.value || socket.value.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  sentLeaveNotice = true;
+  sendAppLifecycle('left');
+}
+
+function handlePageShow() {
+  if (!sentLeaveNotice || !socket.value || socket.value.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  sentLeaveNotice = false;
+  sendAppLifecycle('open');
 }
 
 function handleClickExperimentEvent(payload: Extract<ClientChatEvent, { type: 'image-click' }>) {
@@ -304,12 +335,19 @@ watch(messages, () => {
 
 onMounted(() => {
   connect();
+  window.addEventListener('pagehide', notifyAppLeft);
+  window.addEventListener('beforeunload', notifyAppLeft);
+  window.addEventListener('pageshow', handlePageShow);
 });
 
 onBeforeUnmount(() => {
   shouldReconnect = false;
   window.clearTimeout(typingIdleTimer);
   emitTyping(false);
+  notifyAppLeft();
+  window.removeEventListener('pagehide', notifyAppLeft);
+  window.removeEventListener('beforeunload', notifyAppLeft);
+  window.removeEventListener('pageshow', handlePageShow);
   socket.value?.close();
 });
 </script>

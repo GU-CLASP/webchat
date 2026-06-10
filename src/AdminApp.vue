@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { ParticipantState, ServerAdminEvent } from '@shared/admin';
+import { formatTime } from '@shared/admin';
+import type { AdminNotification, ParticipantState, ServerAdminEvent } from '@shared/admin';
 import type { Message, ServerChatEvent } from '@shared/chat';
 import ParticipantCard from "./ParticipantCard.vue";
 import MessageLog from './MessageLog.vue';
@@ -12,6 +13,7 @@ const adminWsUrl =
 const chatEnabled = ref(false);
 const participants = ref<Record<string, ParticipantState>>({});
 const messages = ref<Message[]>([]);
+const notifications = ref<AdminNotification[]>([]);
 const isConnected = ref(false);
 const draft = ref('');
 const reconnectAttempt = ref(0);
@@ -27,6 +29,16 @@ const orderedParticipants = computed(() =>
 const readyCount = computed(() =>
   Object.values(participants.value).filter((participant) => participant.isReady).length,
 );
+
+const recentNotifications = computed(() => notifications.value.slice(0, 10));
+
+function notificationText(notification: AdminNotification) {
+  if (notification.kind === 'app-open') {
+    return `${notification.senderName} opened the app`;
+  }
+
+  return `${notification.senderName} left the app`;
+}
 
 function connect() {
   const url = new URL(window.location.href);
@@ -51,6 +63,7 @@ function connect() {
         payload.participants.map((participant) => [participant.senderId, participant]),
       );
       messages.value = payload.messages;
+      notifications.value = payload.notifications ?? [];
       return;
     }
 
@@ -64,6 +77,11 @@ function connect() {
 
     if (payload.type === 'message') {
       messages.value = [...messages.value, payload.message];
+      return;
+    }
+
+    if (payload.type === 'notification') {
+      notifications.value = [payload.notification, ...notifications.value].slice(0, 100);
       return;
     }
 
@@ -159,6 +177,28 @@ onBeforeUnmount(() => {
           Broadcast
         </button>
       </form>
+    </section>
+
+    <section class="notification-panel" aria-live="polite">
+      <div class="notification-panel-head">
+        <h2>App Activity</h2>
+        <p>{{ notifications.length }} lifecycle notifications</p>
+      </div>
+      <ol class="notification-list" v-if="recentNotifications.length">
+        <li
+          v-for="notification in recentNotifications"
+          :key="notification.id"
+          class="notification-item"
+          :class="notification.kind"
+        >
+          <span class="notification-dot" aria-hidden="true"></span>
+          <div>
+            <p>{{ notificationText(notification) }}</p>
+            <time :datetime="notification.createdAt">{{ formatTime(notification.createdAt) }}</time>
+          </div>
+        </li>
+      </ol>
+      <p v-else class="empty-notifications">No app activity yet</p>
     </section>
 
     <section class="admin-layout">

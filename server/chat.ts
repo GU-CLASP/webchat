@@ -3,9 +3,16 @@ import { WebSocket, WebSocketServer } from 'ws';
 import type { IncomingMessage } from 'node:http';
 import type { ClientChatEvent, Message, ServerChatEvent } from '../shared/chat';
 import { broadcastAdminEvent } from './admin';
-import { appendMessage, getChatHistory, removeParticipant, upsertParticipant } from './state';
+import {
+  appendAdminNotification,
+  appendMessage,
+  getChatHistory,
+  removeParticipant,
+  upsertParticipant,
+} from './state';
 
 const clientMeta = new WeakMap<WebSocket, { senderId: string; senderName: string }>();
+const leftNotificationsSent = new WeakSet<WebSocket>();
 const typingUsers = new Map<string, string>();
 const assignedNames = new Map<string, string>();
 let nextPersonNumber = 65;
@@ -120,6 +127,41 @@ function setTypingState(senderId: string, senderName: string, isTyping: boolean)
     senderName,
     isTyping,
   });
+}
+
+function notifyAdmin(kind: 'app-open' | 'app-left', senderId: string, senderName: string) {
+  const notification = appendAdminNotification({
+    kind,
+    senderId,
+    senderName,
+  });
+
+  broadcastAdminEvent({
+    type: 'notification',
+    notification,
+  });
+}
+
+function notifyParticipantLeft(
+  socket: WebSocket,
+  participant: { senderId: string; senderName: string },
+) {
+  if (leftNotificationsSent.has(socket)) {
+    return;
+  }
+
+  leftNotificationsSent.add(socket);
+
+  if (typingUsers.has(participant.senderId)) {
+    setTypingState(participant.senderId, participant.senderName, false);
+  }
+
+  removeParticipant(participant.senderId);
+  broadcastAdminEvent({
+    type: 'participant-left',
+    senderId: participant.senderId,
+  });
+  notifyAdmin('app-left', participant.senderId, participant.senderName);
 }
 
 export function handleChatUpgrade(request: IncomingMessage, socket: any, head: Buffer) {
@@ -243,6 +285,26 @@ chatWss.on('connection', (socket) => {
       return;
     }
 
+    if (payload.type === 'app-lifecycle') {
+      logEvent('app-lifecycle', {
+        senderId: payload.senderId,
+        senderName,
+        status: payload.status,
+      });
+
+      if (payload.status === 'open') {
+        leftNotificationsSent.delete(socket);
+        notifyAdmin('app-open', payload.senderId, senderName);
+        return;
+      }
+
+      notifyParticipantLeft(socket, {
+        senderId: payload.senderId,
+        senderName,
+      });
+      return;
+    }
+
     if (payload.type === 'ready-state') {
       logEvent('ready-state', {
         senderId: payload.senderId,
@@ -327,14 +389,6 @@ chatWss.on('connection', (socket) => {
       return;
     }
 
-    if (typingUsers.has(participant.senderId)) {
-      setTypingState(participant.senderId, participant.senderName, false);
-    }
-
-    removeParticipant(participant.senderId);
-    broadcastAdminEvent({
-      type: 'participant-left',
-      senderId: participant.senderId,
-    });
+    notifyParticipantLeft(socket, participant);
   });
 });
