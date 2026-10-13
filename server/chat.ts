@@ -19,6 +19,7 @@ let chatEnabledEvent: ServerChatEvent = {
 
 export function setChatEnabledEvent(event: ServerChatEvent) {
   chatEnabledEvent = event;
+  logEvent('chat-enabled', event);
   broadcastPayload(event);
 }
 
